@@ -1,0 +1,270 @@
+/* Apple / macOS 设计系统 —— 这个应用的唯一真相来源。
+   改外观改这里的 token，不要在 app.css 里写死颜色和字号。
+
+   取自 macOS Human Interface Guidelines 的语汇：系统字体（San Francisco /
+   PingFang SC）、系统语义色（label / separator / systemBlue 等，光暗两套通过
+   prefers-color-scheme 跟随 nativeTheme = 'system'）、13px 基准控件字号、
+   4pt 间距网格、连续圆角、克制的阴影分层。没有外部字体或图片依赖——
+   系统字体总是在，离线也不走样。 */
+
+:root {
+  color-scheme: light dark;
+
+  /* — 强调色：systemBlue —— */
+  --accent: #007aff;
+  --accent-pressed: #0060d1;
+  --accent-tint: rgba(0, 122, 255, .12);
+
+  /* — 状态色：systemGreen / systemOrange / systemRed / systemGray — */
+  --ok: #34c759;
+  --warn: #ff9500;
+  --err: #ff3b30;
+  --idle: #8e8e93;
+
+  /* — 文字：label 层级 — */
+  --label: #1d1d1f;
+  --label-2: rgba(0, 0, 0, .5);
+  --label-3: rgba(0, 0, 0, .32);
+  --label-4: rgba(0, 0, 0, .18);
+
+  /* — 表面 — */
+  --bg-canvas: #f2f2f3;
+  --bg-content: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-control: #ffffff;
+  --bg-control-fill: rgba(0, 0, 0, .045);
+  --bg-control-fill-strong: rgba(0, 0, 0, .07);
+  --separator: rgba(0, 0, 0, .1);
+  --separator-opaque: #d4d4d7;
+
+  --sidebar-hover: rgba(0, 0, 0, .05);
+  --sidebar-selected: rgba(0, 0, 0, .08);
+
+  --scrim: rgba(0, 0, 0, .28);
+
+  /* 菜单栏面板叠在原生 popover 毛玻璃材质上的半透明底色（见 tray.js 的
+     vibrancy: 'popover'）——不能是实色，否则毛玻璃白搭；也不能完全不给，
+     否则文字对比度会随桌面壁纸忽高忽低。 */
+  --panel-tint: rgba(255, 255, 255, .6);
+
+  /* — 排版 — */
+  --font-text: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, monospace;
+
+  /* — 间距：4pt 网格 — */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* — 圆角：连续角（squircle 的近似），控件小、卡片大 — */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 14px;
+  --radius-full: 999px;
+
+  /* — 阴影：软、弥散，越大的表面阴影越深 — */
+  --shadow-sm: 0 1px 1px rgba(0, 0, 0, .045), 0 1px 3px rgba(0, 0, 0, .06);
+  --shadow-md: 0 6px 20px rgba(0, 0, 0, .12);
+  --shadow-lg: 0 20px 48px -12px rgba(0, 0, 0, .38);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --accent: #0a84ff;
+    --accent-pressed: #3f9dff;
+    --accent-tint: rgba(10, 132, 255, .22);
+
+    --ok: #30d158;
+    --warn: #ff9f0a;
+    --err: #ff453a;
+    --idle: #98989d;
+
+    --label: #f5f5f7;
+    --label-2: rgba(255, 255, 255, .55);
+    --label-3: rgba(255, 255, 255, .36);
+    --label-4: rgba(255, 255, 255, .18);
+
+    --bg-canvas: #1c1c1e;
+    --bg-content: #1e1e20;
+    --bg-elevated: #2c2c2e;
+    --bg-control: #232325;
+    --bg-control-fill: rgba(255, 255, 255, .08);
+    --bg-control-fill-strong: rgba(255, 255, 255, .13);
+    --separator: rgba(255, 255, 255, .14);
+    --separator-opaque: #3a3a3c;
+
+    --sidebar-hover: rgba(255, 255, 255, .06);
+    --sidebar-selected: rgba(255, 255, 255, .12);
+
+    --scrim: rgba(0, 0, 0, .5);
+    --panel-tint: rgba(30, 30, 32, .5);
+
+    --shadow-sm: 0 1px 1px rgba(0, 0, 0, .2), 0 1px 3px rgba(0, 0, 0, .3);
+    --shadow-md: 0 6px 20px rgba(0, 0, 0, .38);
+    --shadow-lg: 0 24px 56px -12px rgba(0, 0, 0, .6);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0; font-family: var(--font-text);
+  font-size: 13px; line-height: 1.4; font-weight: 400;
+  color: var(--label); background: var(--bg-canvas);
+}
+h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.25; letter-spacing: -0.011em; margin: 0 0 var(--space-2); }
+h1 { font-size: 26px; letter-spacing: -0.02em; }
+h2 { font-size: 22px; letter-spacing: -0.018em; }
+h3 { font-size: 18px; letter-spacing: -0.014em; }
+h4 { font-size: 15px; }
+h5 { font-size: 13px; }
+h6 { font-size: 11px; color: var(--label-2); }
+p { margin: 0 0 var(--space-3); }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+img { display: block; max-width: 100%; }
+figure { margin: 0; }
+figcaption { font-size: 11px; margin-top: var(--space-1); color: var(--label-2); }
+.text-muted { color: var(--label-2); }
+:focus { outline: none; }
+:focus-visible { outline: 3px solid var(--accent-tint); outline-offset: 1px; border-radius: var(--radius-sm); }
+::selection { background: var(--accent-tint); }
+
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+.hr { height: 1px; border: 0; margin: var(--space-4) 0; background: var(--separator); }
+
+/* — 按钮：macOS 三种控件量级 — 常规填充、次要描边、无边框文字链接 — */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: default; user-select: none;
+  font: inherit; font-size: 13px; font-weight: 590; line-height: 1;
+  color: var(--label); background: var(--bg-control-fill);
+  border: none; border-radius: var(--radius-md);
+  padding: 7px 14px; min-height: 28px;
+  transition: filter .08s ease;
+}
+.btn svg { display: block; }
+.btn:disabled { opacity: 0.38; cursor: not-allowed; }
+.btn:active:not(:disabled) { filter: brightness(0.94); }
+
+.btn-primary {
+  background: var(--accent); color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16);
+}
+.btn-primary:hover:not(:disabled) { background: var(--accent-pressed); }
+.btn-primary:active:not(:disabled) { background: var(--accent-pressed); filter: brightness(0.94); }
+
+.btn-secondary { background: var(--bg-control-fill); }
+.btn-secondary:hover:not(:disabled) { background: var(--bg-control-fill-strong); }
+
+.btn-ghost { background: transparent; color: var(--accent); padding-inline: var(--space-2); }
+.btn-ghost:hover:not(:disabled) { background: var(--accent-tint); }
+
+.btn-icon { width: 28px; height: 28px; padding: 0; min-height: 0; }
+.btn-block { width: 100%; margin-top: var(--space-2); }
+
+/* — 表单 — */
+.field > label {
+  display: block; font-size: 12px; margin-bottom: 5px;
+  color: var(--label-2);
+}
+.input {
+  width: 100%; min-height: 28px; padding: 5px 9px; font: inherit;
+  font-size: 13px; color: var(--label); caret-color: var(--accent);
+  background: var(--bg-control);
+  border: 1px solid var(--separator-opaque); border-radius: var(--radius-md);
+}
+.input:hover { border-color: var(--label-3); }
+.input:focus-visible {
+  border-color: var(--accent); outline-offset: 0;
+  outline: 3px solid var(--accent-tint);
+}
+textarea.input { min-height: 90px; resize: vertical; }
+
+.radio { display: inline-flex; align-items: center; gap: 8px; cursor: default; font-size: 13px; }
+.radio input, .seg-opt input {
+  position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+}
+.radio .dot {
+  width: 16px; height: 16px; flex: none; border-radius: 50%;
+  border: 1.5px solid var(--separator-opaque); background: var(--bg-control);
+}
+.radio:hover .dot { border-color: var(--accent); }
+.radio input:checked + .dot {
+  border-color: var(--accent); background: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--bg-content);
+}
+.radio input:focus-visible + .dot { outline: 3px solid var(--accent-tint); outline-offset: 1px; }
+
+/* 分段控件：灰色轨道里一枚会滑动的高亮片，不是实心强调色—— macOS 原生的
+   选中态是「浮起的浅色/深色片」，而不是给选中项整体染色。 */
+.seg {
+  display: inline-flex; gap: 2px; padding: 2px;
+  background: var(--bg-control-fill); border-radius: var(--radius-md);
+}
+.seg-opt {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 11px; font-size: 12.5px; border-radius: var(--radius-sm);
+  cursor: default; color: var(--label-2);
+}
+.seg-opt:has(input:checked) {
+  background: var(--bg-elevated); color: var(--label);
+  box-shadow: var(--shadow-sm);
+}
+.seg-opt:not(:has(input:checked)):hover { color: var(--label); }
+.seg-opt:has(input:focus-visible) { outline: 3px solid var(--accent-tint); outline-offset: -1px; }
+
+/* — 卡片 — */
+.card {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-3); border-radius: var(--radius-lg); background: var(--bg-elevated);
+}
+.card-kicker { font-size: 11px; color: var(--label-2); }
+.card-title { font-weight: 600; font-size: 15px; line-height: 1.25; }
+.card-body { margin: 0; font-size: 12.5px; color: var(--label-2); flex: 1; }
+.card-meta { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--label-3); }
+.elev-sm { box-shadow: var(--shadow-sm); }
+.elev-md { box-shadow: var(--shadow-md); }
+.elev-lg { box-shadow: var(--shadow-lg); }
+
+/* — 标签：小圆角胶囊，浅色底 + 同色系文字 — */
+.tag {
+  display: inline-flex; align-items: center; font-size: 11px; font-weight: 590;
+  padding: 3px 8px; border-radius: var(--radius-full);
+}
+.tag-accent { background: var(--accent-tint); color: var(--accent); }
+.tag-ok { background: color-mix(in srgb, var(--ok) 16%, transparent); color: color-mix(in srgb, var(--ok) 70%, var(--label)); }
+.tag-neutral { background: var(--bg-control-fill); color: var(--label-2); }
+.tag-outline { border: 1px solid var(--separator-opaque); color: var(--label-2); }
+
+/* — 表格：macOS 列表——细分隔线、选中/悬停是内缩的圆角高亮 — */
+.table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.table th {
+  text-align: left; font-size: 11px; font-weight: 590;
+  color: var(--label-2);
+  padding: var(--space-2); border-bottom: 1px solid var(--separator);
+}
+.table td { padding: var(--space-2); border-bottom: 1px solid var(--separator); }
+.table tbody tr:hover { background: var(--sidebar-hover); }
+
+/* — 对话框 / 表单页：磨砂背景 + 悬浮圆角卡片 — */
+.dialog-backdrop {
+  position: fixed; inset: 0; display: grid; place-items: center;
+  padding: var(--space-4);
+  background: var(--scrim);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+}
+.dialog {
+  width: min(440px, 100%); display: flex; flex-direction: column; gap: var(--space-3);
+  padding: var(--space-5); border-radius: var(--radius-xl);
+  background: var(--bg-elevated); box-shadow: var(--shadow-lg);
+}
+.dialog-title { font-weight: 600; font-size: 17px; letter-spacing: -0.014em; }
+.dialog-body { font-size: 13px; color: var(--label-2); }
+.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }

@@ -1,0 +1,32 @@
+name: Release
+
+# 推一个 v 开头的 tag（如 v1.0.0）就会触发：在 macOS runner 上打包
+# dmg + zip（x64 与 arm64 各一份），然后自动传到本仓库的 GitHub Release。
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run icons
+
+      - name: Build and publish
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run dist -- --publish always

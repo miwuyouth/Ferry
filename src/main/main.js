@@ -1,0 +1,334 @@
+'use strict';
+
+const { app, BrowserWindow, ipcMain, dialog, shell, Notification, nativeTheme, globalShortcut } = require('electron');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+
+const { Store } = require('./store');
+const { LogBuffer } = require('./logbuf');
+const { Frpc, probeLatency } = require('./frpc');
+const { Metrics } = require('./metrics');
+const { createTray, destroyTray } = require('./tray');
+const toml = require('./toml');
+
+let store, logs, frpc, metrics, mainWindow, tray;
+let quitting = false;
+
+// —— 窗口 ——————————————————————————————————————————————
+
+function createMainWindow() {
+  mainWindow = new BrowserWindow({
+    width: 1180,
+    height: 760,
+    minWidth: 940,
+    minHeight: 600,
+    show: false,
+    // 系统交通灯放进我们的头部条，标题栏其余部分由 CSS 负责拖动。
+    titleBarStyle: 'hiddenInset',
+    trafficLightPosition: { x: 16, y: 16 },
+    // 跟随系统外观选初始底色，避免加载完成前的一瞬间闪错主题。
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#1c1c1e' : '#f2f2f3',
+    webPreferences: {
+      preload: path.join(__dirname, '..', 'preload', 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false
+    }
+  });
+
+  mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
+  mainWindow.once('ready-to-show', () => mainWindow.show());
+
+  mainWindow.on('close', (e) => {
+    // 「关闭窗口时退出」关掉的话，关窗只是把窗口藏起来，菜单栏图标还在。
+    if (!quitting && !store.settings.quitOnClose) {
+      e.preventDefault();
+      mainWindow.hide();
+    }
+  });
+
+  mainWindow.on('closed', () => { mainWindow = null; });
+}
+
+function showMainWindow() {
+  if (!mainWindow) createMainWindow();
+  else { mainWindow.show(); mainWindow.focus(); }
+  app.dock?.show();
+}
+
+// —— 往渲染进程推 ————————————————————————————————————————
+
+function windows() {
+  const list = BrowserWindow.getAllWindows().filter((w) => !w.isDestroyed());
+  return list;
+}
+
+function broadcast(channel, payload) {
+  for (const w of windows()) w.webContents.send(channel, payload);
+}
+
+// 隧道的展示态 = 本地配置 + frpc 的运行态 + （可选的）frps 面板计数。
+function tunnelView() {
+  const status = metrics.proxyStatus;
+  const dash = metrics.dash && metrics.dash.ok ? metrics.dash.byName : null;
+  return store.tunnels.map((t) => {
+    const st = status[t.name];
+    const d = dash ? dash[t.name] : null;
+    let state = '已停止';
+    let kind = 'off';
+    if (t.enabled) {
+      if (!frpc.state.running) { state = '未运行'; kind = 'off'; }
+      else if (!st) { state = '等待启动'; kind = 'pending'; }
+      else if (st.status === 'running') { state = '运行中'; kind = 'on'; }
+      else if (st.status === 'start error' || st.status === 'check failed') {
+        state = st.err ? st.err.split('\n')[0] : '启动失败';
+        kind = 'error';
+      } else { state = st.status === 'new' || st.status === 'wait start' ? '启动中' : st.status; kind = 'pending'; }
+    }
+    return {
+      ...t,
+      state,
+      kind,
+      remoteAddr: st ? st.remoteAddr : '',
+      conns: d ? d.conns : null,
+      up: d ? d.up : null,
+      down: d ? d.down : null
+    };
+  });
+}
+
+function fullState() {
+  return {
+    frpc: frpc.state,
+    tunnels: tunnelView(),
+    metrics: {
+      rate: metrics.rate,
+      latency: metrics.avgLatency(),
+      peakConns: metrics.peakConns,
+      disconnects: metrics.disconnects,
+      series: metrics.trafficSeries(),
+      dashOk: !!(metrics.dash && metrics.dash.ok),
+      dashError: metrics.dash ? metrics.dash.error : ''
+    },
+    settings: store.settings,
+    // 界面显示用的短路径（设计稿底栏写的就是 ~/Library/… 这种形态）。
+    // 真实路径留在主进程，config:reveal 用它。
+    configPath: store.configPath.replace(os.homedir(), '~')
+  };
+}
+
+let pushTimer = null;
+function startPushing() {
+  pushTimer = setInterval(() => broadcast('push:state', fullState()), 1000);
+  metrics.on('tick', () => broadcast('push:state', fullState()));
+  frpc.on('state', () => broadcast('push:state', fullState()));
+}
+
+function notify(title, body) {
+  if (!store.settings.notifyOnError || !Notification.isSupported()) return;
+  new Notification({ title, body }).show();
+}
+
+// —— IPC ——————————————————————————————————————————————
+
+function registerIpc() {
+  ipcMain.handle('app:bootstrap', async () => ({
+    ...fullState(),
+    tunnelsRaw: store.tunnels,
+    logs: logs.all(),
+    appVersion: app.getVersion(),
+    frpcVersion: await frpc.version(),
+    frpcPath: frpc.resolveBinary(),
+    onboarded: store.settings.onboarded
+  }));
+
+  ipcMain.handle('log:all', () => logs.all());
+  ipcMain.handle('log:clear', () => { logs.clear(); return true; });
+  ipcMain.handle('log:export', async () => {
+    const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      title: '导出日志',
+      defaultPath: path.join(app.getPath('downloads'), `frpc-${new Date().toISOString().slice(0, 10)}.log`)
+    });
+    if (canceled || !filePath) return { ok: false };
+    fs.writeFileSync(filePath, logs.toText(), 'utf8');
+    return { ok: true, filePath };
+  });
+
+  ipcMain.handle('frpc:start', () => frpc.start());
+  ipcMain.handle('frpc:stop', async () => { await frpc.stop(); return { ok: true }; });
+  ipcMain.handle('frpc:restart', () => frpc.restart());
+  ipcMain.handle('frpc:apply', () => frpc.apply());
+
+  // 引导页和设置页的「测试连接」：先看 TCP 端口通不通，
+  // 再让 frpc 自己校验一遍这套参数能不能成配置。
+  ipcMain.handle('frpc:test', async (_e, payload) => {
+    const addr = payload.serverAddr;
+    const port = Number(payload.serverPort) || 7000;
+    if (!addr) return { ok: false, message: '请先填写服务器地址。' };
+    const ms = await probeLatency(addr, port, 5000);
+    if (ms == null) return { ok: false, message: `无法连接 ${addr}:${port}（超时或被拒绝）。` };
+    return { ok: true, message: `${addr}:${port} 可达，握手 ${Math.round(ms)} ms。` };
+  });
+
+  ipcMain.handle('settings:patch', async (_e, patch) => {
+    const before = store.settings;
+    const needsRestart =
+      ('serverAddr' in patch && patch.serverAddr !== before.serverAddr) ||
+      ('serverPort' in patch && Number(patch.serverPort) !== Number(before.serverPort)) ||
+      ('token' in patch && patch.token !== before.token) ||
+      ('protocol' in patch && patch.protocol !== before.protocol) ||
+      ('proxyUrl' in patch && patch.proxyUrl !== before.proxyUrl) ||
+      ('logLevel' in patch && patch.logLevel !== before.logLevel);
+
+    const next = store.patchSettings(patch);
+    if ('launchAtLogin' in patch) {
+      app.setLoginItemSettings({ openAtLogin: !!patch.launchAtLogin, openAsHidden: true });
+    }
+    broadcast('push:state', fullState());
+    return { settings: next, needsRestart };
+  });
+
+  ipcMain.handle('tunnel:add', async (_e, t) => {
+    const tunnel = store.addTunnel(t);
+    const res = await frpc.apply();
+    return { tunnel, ...res };
+  });
+
+  ipcMain.handle('tunnel:update', async (_e, { id, patch }) => {
+    store.updateTunnel(id, patch);
+    return frpc.apply();
+  });
+
+  ipcMain.handle('tunnel:remove', async (_e, id) => {
+    store.removeTunnel(id);
+    return frpc.apply();
+  });
+
+  ipcMain.handle('tunnel:toggle', async (_e, id) => {
+    const t = store.tunnels.find((x) => x.id === id);
+    if (!t) return { ok: false };
+    store.updateTunnel(id, { enabled: !t.enabled });
+    broadcast('push:state', fullState());
+    return frpc.apply();
+  });
+
+  ipcMain.handle('tunnel:stopAll', async () => {
+    for (const t of store.tunnels) store.updateTunnel(t.id, { enabled: false });
+    broadcast('push:state', fullState());
+    return frpc.apply();
+  });
+
+  ipcMain.handle('config:export', async () => {
+    const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      title: '导出 frpc.toml',
+      defaultPath: path.join(app.getPath('downloads'), 'frpc.toml')
+    });
+    if (canceled || !filePath) return { ok: false };
+    fs.writeFileSync(filePath, toml.stringify(store.settings, store.tunnels, store.admin), 'utf8');
+    return { ok: true, filePath };
+  });
+
+  ipcMain.handle('config:import', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+      title: '导入 frpc.toml',
+      properties: ['openFile'],
+      filters: [{ name: 'frp 配置', extensions: ['toml'] }]
+    });
+    if (canceled || !filePaths.length) return { ok: false };
+    try {
+      const parsed = toml.parse(fs.readFileSync(filePaths[0], 'utf8'));
+      store.patchSettings(parsed.settings);
+      store.replaceTunnels(parsed.tunnels);
+      await frpc.restart();
+      return { ok: true, count: parsed.tunnels.length };
+    } catch (err) {
+      return { ok: false, message: err.message };
+    }
+  });
+
+  ipcMain.handle('config:reveal', () => { shell.showItemInFolder(store.configPath); });
+
+  ipcMain.handle('frpc:locate', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
+      title: '选择 frpc 可执行文件',
+      properties: ['openFile'],
+      defaultPath: '/usr/local/bin'
+    });
+    if (canceled || !filePaths.length) return { ok: false };
+    store.patchSettings({ frpcPath: filePaths[0] });
+    return { ok: true, path: filePaths[0], version: await frpc.version() };
+  });
+
+  ipcMain.handle('window:show', () => showMainWindow());
+  ipcMain.handle('window:hidePanel', () => tray && tray.hidePanel());
+  ipcMain.handle('window:panelHeight', (_e, h) => tray && tray.setPanelHeight(h));
+  ipcMain.handle('app:quit', () => { quitting = true; app.quit(); });
+  ipcMain.handle('onboard:done', () => { store.patchSettings({ onboarded: true }); return true; });
+}
+
+// —— 启动 ——————————————————————————————————————————————
+
+if (!app.requestSingleInstanceLock()) {
+  app.quit();
+} else {
+  app.on('second-instance', () => showMainWindow());
+}
+
+app.whenReady().then(async () => {
+  nativeTheme.themeSource = 'system'; // 跟随系统的浅色 / 深色外观
+
+  store = new Store();
+  logs = new LogBuffer(store.logPath, (batch) => broadcast('push:logs', batch));
+  frpc = new Frpc(store, logs);
+  metrics = new Metrics(store, frpc);
+
+  frpc.on('crash', () => notify('FrpKit', 'frpc 进程意外退出，正在尝试重连。'));
+  frpc.on('gaveup', () => notify('FrpKit', '自动重连已达上限，连接未恢复。'));
+  frpc.on('state', (s) => { if (tray) tray.update(s, metrics); });
+
+  registerIpc();
+  createMainWindow();
+  tray = createTray({
+    onShow: showMainWindow,
+    onQuit: () => { quitting = true; app.quit(); }
+  });
+  metrics.start();
+  metrics.on('tick', () => tray && tray.update(frpc.state, metrics));
+  startPushing();
+
+  app.setLoginItemSettings({ openAtLogin: !!store.settings.launchAtLogin, openAsHidden: true });
+
+  // 菜单栏面板上印着 ⌘⇧P，那它就得真的能按 —— 界面里写出来的快捷键
+  // 不该是装饰。注册失败（被别的应用占了）只记一行日志，不影响启动。
+  if (!globalShortcut.register('CommandOrControl+Shift+P', async () => {
+    if (frpc.state.running) await frpc.stop();
+    else await frpc.start();
+  })) {
+    logs.note('warn', '快捷键 ⌘⇧P 注册失败，可能已被其它应用占用。');
+  }
+
+  if (store.settings.autoConnect && store.settings.serverAddr) {
+    const res = await frpc.start();
+    if (!res.ok) logs.note('warn', `自动连接未启动：${res.message}`);
+  }
+
+  app.on('activate', () => showMainWindow());
+});
+
+app.on('window-all-closed', () => {
+  // 菜单栏还在跑，关掉所有窗口不等于退出应用。
+  if (store && store.settings.quitOnClose) app.quit();
+});
+
+app.on('before-quit', async (e) => {
+  if (!frpc || !frpc.proc) return;
+  e.preventDefault();
+  quitting = true;
+  clearInterval(pushTimer);
+  globalShortcut.unregisterAll();
+  metrics.stop();
+  await frpc.stop();
+  destroyTray();
+  app.exit(0);
+});

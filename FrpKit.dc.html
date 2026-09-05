@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="_ds/industry-dcb3919b-e5ab-4f78-98b9-6593fc0315c8/styles.css">
+<script src="_ds/industry-dcb3919b-e5ab-4f78-98b9-6593fc0315c8/_ds_bundle.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+  body { margin: 0; background: #dfe0e2; font-family: var(--font-body), "PingFang SC", "Hiragino Sans GB", sans-serif; }
+  h1, h2, h3, h4, h5, h6, .card-title, .btn, .nav-brand { font-family: var(--font-heading), "PingFang SC", sans-serif; }
+  a { color: var(--color-accent-700); }
+  a:hover { color: var(--color-accent-900); }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+  .btn { white-space: nowrap; flex: none; }
+  .seg-opt { white-space: nowrap; }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; padding: 56px 48px 96px; display: flex; flex-direction: column; align-items: center; gap: 72px; background: #dfe0e2">
+
+  <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+    <div style="display: flex; align-items: baseline; gap: 12px">
+      <span style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700)">01 / 主窗口</span>
+      <span style="font-size: 12px; color: #6b6f73">frpc 客户端 · 可点击原型</span>
+    </div>
+
+    <div style="width: 1180px; height: 760px; display: flex; flex-direction: column; overflow: hidden; background: var(--color-bg); border: 1px solid #b9bcc0; border-radius: 10px; box-shadow: 0 28px 60px -20px rgba(29,45,61,0.45)">
+
+      <div style="height: 46px; flex: none; display: flex; align-items: center; gap: 16px; padding: 0 16px; border-bottom: 1px solid var(--color-divider); background: #eaeaec">
+        <div style="display: flex; gap: 8px; width: 190px">
+          <span style="width: 12px; height: 12px; border-radius: 50%; background: #e8695f"></span>
+          <span style="width: 12px; height: 12px; border-radius: 50%; background: #e3b341"></span>
+          <span style="width: 12px; height: 12px; border-radius: 50%; background: #78bf5b"></span>
+        </div>
+        <div style="flex: 1; display: flex; align-items: center; gap: 10px">
+          <span style="font-family: var(--font-heading), sans-serif; font-size: 17px; letter-spacing: 0.01em">{{ viewTitle }}</span>
+          <span style="font-size: 12px; color: #74787c">{{ viewSub }}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px">
+          <span class="tag tag-accent" style="border-radius: 0">已连接 frps.oakline.dev</span>
+          <button class="btn btn-secondary" style="border-radius: 0; font-size: 13px" onClick="{{ openOnboard }}">重新引导</button>
+        </div>
+      </div>
+
+      <div style="flex: 1; display: grid; grid-template-columns: 214px 1fr; min-height: 0">
+
+        <div style="border-right: 1px solid var(--color-divider); background: #ebebed; padding: 16px 12px; display: flex; flex-direction: column; gap: 22px">
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #83878b; padding: 0 8px 6px">工作区</div>
+            <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+              <button style="all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 8px 10px; font-size: 14px; border-left: 2px solid {{ n.mark }}; background: {{ n.bg }}; color: {{ n.fg }}" style-hover="background: rgba(89,128,166,0.12)" onClick="{{ n.go }}">
+                <span class="mono" style="font-size: 11px; opacity: 0.7">{{ n.num }}</span>
+                <span style="flex: 1">{{ n.label }}</span>
+                <span class="mono" style="font-size: 11px; opacity: 0.6">{{ n.badge }}</span>
+              </button>
+            </sc-for>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 2px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #83878b; padding: 0 8px 6px">服务器</div>
+            <div class="blueprint" style="border-radius: 0; padding: 12px 10px; display: flex; flex-direction: column; gap: 6px">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div class="mono" style="font-size: 12px">frps.oakline.dev</div>
+              <div style="font-size: 11px; color: #74787c">:7000 · tcp · v0.61.1</div>
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-accent-700)">
+                <span style="width: 6px; height: 6px; background: #4f8a3d"></span>心跳 3s 前
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: auto; display: flex; flex-direction: column; gap: 8px">
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #74787c">
+              <span>上行</span><span class="mono">1.8 MB/s</span>
+            </div>
+            <div style="height: 3px; background: #d7d8da"><div style="width: 62%; height: 3px; background: var(--color-accent)"></div></div>
+            <div style="display: flex; justify-content: space-between; font-size: 11px; color: #74787c">
+              <span>下行</span><span class="mono">6.4 MB/s</span>
+            </div>
+            <div style="height: 3px; background: #d7d8da"><div style="width: 84%; height: 3px; background: var(--color-accent-700)"></div></div>
+          </div>
+        </div>
+
+        <div style="min-height: 0; display: flex; flex-direction: column; position: relative">
+
+          <sc-if value="{{ isList }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; min-height: 0; height: 100%">
+              <div style="flex: none; display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--color-divider)">
+                <input class="input" placeholder="搜索名称、端口或域名" style="border-radius: 0; width: 260px" value="{{ q }}" onChange="{{ setQ }}">
+                <div class="seg" style="border-radius: 0">
+                  <sc-for list="{{ typeFilters }}" as="t" hint-placeholder-count="5">
+                    <button class="seg-opt" style="border-radius: 0; background: {{ t.bg }}; color: {{ t.fg }}" onClick="{{ t.go }}">{{ t.label }}</button>
+                  </sc-for>
+                </div>
+                <div style="margin-left: auto; display: flex; gap: 8px">
+                  <button class="btn btn-secondary" style="border-radius: 0" onClick="{{ stopAll }}">全部停止</button>
+                  <button class="btn btn-primary blueprint" style="border-radius: 0" onClick="{{ openNew }}">
+                    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                    ＋ 新建隧道
+                  </button>
+                </div>
+              </div>
+
+              <div style="flex: none; display: grid; grid-template-columns: 200px 74px 1fr 96px 120px 64px; gap: 12px; padding: 8px 20px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #83878b; border-bottom: 1px solid var(--color-divider)">
+                <span>名称</span><span>类型</span><span>本地 → 远程</span><span>连接数</span><span>今日流量</span><span style="text-align: right">启用</span>
+              </div>
+
+              <div style="flex: 1; overflow: auto">
+                <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+                  <div style="display: grid; grid-template-columns: 200px 74px 1fr 96px 120px 64px; gap: 12px; align-items: center; padding: 13px 20px; border-bottom: 1px solid rgba(29,31,32,0.07)" style-hover="background: rgba(89,128,166,0.06)">
+                    <div style="display: flex; align-items: center; gap: 9px; min-width: 0">
+                      <span style="width: 7px; height: 7px; flex: none; background: {{ r.dot }}"></span>
+                      <div style="min-width: 0">
+                        <div style="font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ r.name }}</div>
+                        <div style="font-size: 11px; color: {{ r.stateColor }}">{{ r.state }}</div>
+                      </div>
+                    </div>
+                    <span class="tag tag-outline" style="border-radius: 0; text-transform: uppercase">{{ r.type }}</span>
+                    <div class="mono" style="font-size: 12px; color: #4a4e52; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ r.route }}</div>
+                    <span class="mono" style="font-size: 13px">{{ r.conns }}</span>
+                    <span class="mono" style="font-size: 13px">{{ r.traffic }}</span>
+                    <div style="display: flex; justify-content: flex-end">
+                      <button style="all: unset; cursor: pointer; width: 38px; height: 20px; padding: 2px; box-sizing: border-box; background: {{ r.trackBg }}; border: 1px solid {{ r.trackBorder }}" onClick="{{ r.toggle }}">
+                        <span style="display: block; width: 14px; height: 14px; background: {{ r.knobBg }}; margin-left: {{ r.knobX }}; transition: margin-left .16s ease"></span>
+                      </button>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="flex: none; display: flex; align-items: center; gap: 18px; padding: 10px 20px; border-top: 1px solid var(--color-divider); font-size: 12px; color: #6b6f73; background: #ebebed">
+                <span>{{ runningCount }} 个运行中 · 共 {{ totalCount }} 个隧道</span>
+                <span class="mono">frpc.toml · ~/Library/Application Support/FrpKit</span>
+                <button class="btn btn-ghost" style="border-radius: 0; margin-left: auto" onClick="{{ goLog }}">查看日志</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isLog }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; height: 100%; min-height: 0">
+              <div style="flex: none; display: flex; align-items: center; gap: 10px; padding: 14px 20px; border-bottom: 1px solid var(--color-divider)">
+                <div class="seg" style="border-radius: 0">
+                  <sc-for list="{{ logFilters }}" as="f" hint-placeholder-count="4">
+                    <button class="seg-opt" style="border-radius: 0; background: {{ f.bg }}; color: {{ f.fg }}" onClick="{{ f.go }}">{{ f.label }}</button>
+                  </sc-for>
+                </div>
+                <label style="display: flex; align-items: center; gap: 7px; font-size: 13px; color: #4a4e52; cursor: pointer">
+                  <input type="checkbox" checked="{{ autoScroll }}" onChange="{{ toggleScroll }}" style="accent-color: var(--color-accent); width: 14px; height: 14px">自动滚动
+                </label>
+                <div style="margin-left: auto; display: flex; gap: 8px">
+                  <button class="btn btn-secondary" style="border-radius: 0">导出</button>
+                  <button class="btn btn-secondary" style="border-radius: 0" onClick="{{ clearLog }}">清空</button>
+                </div>
+              </div>
+              <div class="mono" style="flex: 1; overflow: auto; padding: 12px 20px; font-size: 12.5px; line-height: 1.85; background: #ffffff">
+                <sc-for list="{{ logLines }}" as="l" hint-placeholder-count="14">
+                  <div style="display: grid; grid-template-columns: 78px 58px 1fr; gap: 12px">
+                    <span style="color: #9a9ea2">{{ l.t }}</span>
+                    <span style="color: {{ l.color }}">{{ l.lvl }}</span>
+                    <span style="color: #34383c">{{ l.msg }}</span>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="flex: none; padding: 10px 20px; border-top: 1px solid var(--color-divider); font-size: 12px; color: #6b6f73; background: #ebebed">
+                日志级别 info · 保留 7 天 · {{ logCount }} 行
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isStats }}" hint-placeholder-val="{{ true }}">
+            <div style="height: 100%; overflow: auto; padding: 20px">
+              <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px">
+                <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+                  <div class="card blueprint" style="border-radius: 0; background: transparent; gap: 4px; padding: 14px">
+                    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                    <div class="card-kicker">{{ s.label }}</div>
+                    <div class="mono" style="font-size: 26px; line-height: 1.1">{{ s.value }}</div>
+                    <div style="font-size: 11px; color: #74787c">{{ s.note }}</div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div class="blueprint" style="border-radius: 0; margin-top: 20px; padding: 16px">
+                <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                <div style="display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px">
+                  <h4 style="margin: 0; font-size: 16px">近 24 小时流量</h4>
+                  <span style="font-size: 11px; color: #74787c">深色为上行，浅色为下行 · 单位 GB</span>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(24, 1fr); gap: 5px; align-items: end; height: 150px">
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 12%; background: var(--color-accent-300)"></div><div style="height: 6%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 9%; background: var(--color-accent-300)"></div><div style="height: 5%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 7%; background: var(--color-accent-300)"></div><div style="height: 4%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 6%; background: var(--color-accent-300)"></div><div style="height: 3%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 8%; background: var(--color-accent-300)"></div><div style="height: 4%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 14%; background: var(--color-accent-300)"></div><div style="height: 7%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 26%; background: var(--color-accent-300)"></div><div style="height: 12%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 38%; background: var(--color-accent-300)"></div><div style="height: 18%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 52%; background: var(--color-accent-300)"></div><div style="height: 24%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 61%; background: var(--color-accent-300)"></div><div style="height: 29%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 57%; background: var(--color-accent-300)"></div><div style="height: 33%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 49%; background: var(--color-accent-300)"></div><div style="height: 22%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 44%; background: var(--color-accent-300)"></div><div style="height: 19%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 58%; background: var(--color-accent-300)"></div><div style="height: 27%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 72%; background: var(--color-accent-300)"></div><div style="height: 31%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 81%; background: var(--color-accent-300)"></div><div style="height: 36%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 76%; background: var(--color-accent-300)"></div><div style="height: 41%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 88%; background: var(--color-accent-300)"></div><div style="height: 38%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 94%; background: var(--color-accent-300)"></div><div style="height: 44%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 79%; background: var(--color-accent-300)"></div><div style="height: 35%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 64%; background: var(--color-accent-300)"></div><div style="height: 28%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 46%; background: var(--color-accent-300)"></div><div style="height: 21%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 31%; background: var(--color-accent-300)"></div><div style="height: 15%; background: var(--color-accent-700)"></div></div>
+                  <div style="display: flex; flex-direction: column; justify-content: flex-end; height: 100%; gap: 2px"><div style="height: 19%; background: var(--color-accent-300)"></div><div style="height: 9%; background: var(--color-accent-700)"></div></div>
+                </div>
+                <div class="mono" style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 10px; color: #9a9ea2">
+                  <span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>现在</span>
+                </div>
+              </div>
+
+              <div style="margin-top: 20px">
+                <h4 style="font-size: 16px; margin: 0 0 10px">按隧道</h4>
+                <table class="table">
+                  <thead>
+                    <tr><th>隧道</th><th>类型</th><th>连接数</th><th>上行</th><th>下行</th><th>平均延迟</th></tr>
+                  </thead>
+                  <tbody>
+                    <sc-for list="{{ statRows }}" as="s" hint-placeholder-count="6">
+                      <tr>
+                        <td>{{ s.name }}</td>
+                        <td style="text-transform: uppercase; color: #6b6f73">{{ s.type }}</td>
+                        <td class="mono">{{ s.conns }}</td>
+                        <td class="mono">{{ s.up }}</td>
+                        <td class="mono">{{ s.down }}</td>
+                        <td class="mono">{{ s.ping }}</td>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ true }}">
+            <div style="height: 100%; overflow: auto; padding: 20px; max-width: 760px">
+              <div style="display: flex; flex-direction: column; gap: 26px">
+
+                <div>
+                  <h4 style="font-size: 16px; margin: 0 0 4px">服务器</h4>
+                  <p style="font-size: 12px; color: #74787c; margin: 0 0 12px">frpc 与 frps 建立控制连接的参数。</p>
+                  <div style="display: grid; grid-template-columns: 1fr 140px; gap: 12px">
+                    <div class="field"><label>服务器地址</label><input class="input" style="border-radius: 0" value="frps.oakline.dev"></div>
+                    <div class="field"><label>端口</label><input class="input mono" style="border-radius: 0" value="7000"></div>
+                  </div>
+                  <div class="field" style="margin-top: 12px"><label>Token</label><input class="input mono" style="border-radius: 0" type="password" value="••••••••••••••••"></div>
+                  <div class="field" style="margin-top: 12px">
+                    <label>传输协议</label>
+                    <div class="seg" style="border-radius: 0; margin-top: 4px">
+                      <sc-for list="{{ protoOpts }}" as="p" hint-placeholder-count="4">
+                        <button class="seg-opt mono" style="border-radius: 0; background: {{ p.bg }}; color: {{ p.fg }}" onClick="{{ p.go }}">{{ p.label }}</button>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 style="font-size: 16px; margin: 0 0 12px">启动与常驻</h4>
+                  <div style="display: flex; flex-direction: column; border-top: 1px solid var(--color-divider)">
+                    <sc-for list="{{ switches }}" as="s" hint-placeholder-count="5">
+                      <div style="display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(29,31,32,0.07)">
+                        <div style="flex: 1">
+                          <div style="font-size: 14px">{{ s.label }}</div>
+                          <div style="font-size: 11.5px; color: #74787c">{{ s.note }}</div>
+                        </div>
+                        <button style="all: unset; cursor: pointer; width: 38px; height: 20px; padding: 2px; box-sizing: border-box; background: {{ s.trackBg }}; border: 1px solid {{ s.trackBorder }}" onClick="{{ s.toggle }}">
+                          <span style="display: block; width: 14px; height: 14px; background: {{ s.knobBg }}; margin-left: {{ s.knobX }}; transition: margin-left .16s ease"></span>
+                        </button>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 style="font-size: 16px; margin: 0 0 12px">代理</h4>
+                  <div class="field"><label>出站代理（可选）</label><input class="input mono" style="border-radius: 0" placeholder="socks5://127.0.0.1:1080"></div>
+                </div>
+
+                <div>
+                  <h4 style="font-size: 16px; margin: 0 0 12px">更新</h4>
+                  <div class="blueprint" style="border-radius: 0; padding: 14px; display: flex; align-items: center; gap: 16px">
+                    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                    <div style="flex: 1">
+                      <div style="font-size: 14px">FrpKit 1.4.2 · frpc 0.61.1</div>
+                      <div style="font-size: 11.5px; color: #74787c">上次检查 今天 09:12 · 已是最新版本</div>
+                    </div>
+                    <button class="btn btn-secondary" style="border-radius: 0">检查更新</button>
+                  </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; padding-bottom: 8px">
+                  <button class="btn btn-primary blueprint" style="border-radius: 0">
+                    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                    保存并重载 frpc
+                  </button>
+                  <button class="btn btn-secondary" style="border-radius: 0">导出 frpc.toml</button>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ showNew }}" hint-placeholder-val="{{ false }}">
+            <div style="position: absolute; inset: 0; display: flex; justify-content: center; align-items: flex-start; background: rgba(29,45,61,0.28)">
+              <div class="blueprint" style="width: 560px; margin-top: 0; background: var(--color-bg); border-radius: 0; box-shadow: var(--shadow-lg); padding: 20px; display: flex; flex-direction: column; gap: 16px">
+                <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                <div>
+                  <h4 style="font-size: 20px; margin: 0 0 2px">新建隧道</h4>
+                  <div style="font-size: 12px; color: #74787c">保存后立即写入 frpc.toml 并热重载。</div>
+                </div>
+                <div class="field">
+                  <label>类型</label>
+                  <div class="seg" style="border-radius: 0; margin-top: 4px">
+                    <sc-for list="{{ newTypes }}" as="t" hint-placeholder-count="4">
+                      <button class="seg-opt mono" style="border-radius: 0; background: {{ t.bg }}; color: {{ t.fg }}" onClick="{{ t.go }}">{{ t.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div class="field"><label>名称</label><input class="input" style="border-radius: 0" placeholder="例如 web-staging"></div>
+                <div style="display: grid; grid-template-columns: 1fr 120px; gap: 12px">
+                  <div class="field"><label>本地地址</label><input class="input mono" style="border-radius: 0" value="127.0.0.1"></div>
+                  <div class="field"><label>本地端口</label><input class="input mono" style="border-radius: 0" placeholder="3000"></div>
+                </div>
+                <sc-if value="{{ newIsPort }}" hint-placeholder-val="{{ true }}">
+                  <div class="field"><label>远程端口</label><input class="input mono" style="border-radius: 0" placeholder="7100"></div>
+                </sc-if>
+                <sc-if value="{{ newIsHttp }}" hint-placeholder-val="{{ false }}">
+                  <div class="field"><label>自定义域名</label><input class="input mono" style="border-radius: 0" placeholder="staging.oakline.dev"></div>
+                </sc-if>
+                <div class="mono" style="font-size: 12px; color: #4a4e52; background: #ffffff; border: 1px solid var(--color-divider); padding: 10px 12px; white-space: pre-line">{{ newPreview }}</div>
+                <div style="display: flex; justify-content: flex-end; gap: 8px">
+                  <button class="btn btn-secondary" style="border-radius: 0" onClick="{{ closeNew }}">取消</button>
+                  <button class="btn btn-primary blueprint" style="border-radius: 0" onClick="{{ closeNew }}">
+                    <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                    保存隧道
+                  </button>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ showOnboard }}" hint-placeholder-val="{{ false }}">
+            <div style="position: absolute; inset: 0; background: var(--color-bg); display: grid; grid-template-columns: 260px 1fr">
+              <div style="background: var(--color-accent-900); color: #eef2f6; padding: 24px; display: flex; flex-direction: column; gap: 24px">
+                <div style="font-family: var(--font-heading), sans-serif; font-size: 22px">FrpKit</div>
+                <div style="display: flex; flex-direction: column; gap: 12px">
+                  <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+                    <div style="display: flex; gap: 10px; align-items: flex-start; opacity: {{ s.op }}">
+                      <span class="mono" style="font-size: 11px; border: 1px solid rgba(238,242,246,0.5); width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; flex: none">{{ s.n }}</span>
+                      <div>
+                        <div style="font-size: 14px">{{ s.label }}</div>
+                        <div style="font-size: 11.5px; opacity: 0.7">{{ s.note }}</div>
+                      </div>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="margin-top: auto; font-size: 11px; opacity: 0.6">首次启动引导 · 可随时在设置中重新运行</div>
+              </div>
+              <div style="padding: 40px 44px; display: flex; flex-direction: column">
+                <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700)">第 {{ onboard }} / 3 步</div>
+                <h2 style="font-size: 34px; margin: 6px 0 10px">{{ onboardTitle }}</h2>
+                <p style="font-size: 14.5px; color: #4a4e52; max-width: 46ch">{{ onboardBody }}</p>
+                <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 12px; max-width: 420px">
+                  <sc-if value="{{ onboardIsServer }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: flex; flex-direction: column; gap: 12px">
+                      <div style="display: grid; grid-template-columns: 1fr 120px; gap: 12px">
+                        <div class="field"><label>服务器地址</label><input class="input mono" style="border-radius: 0" placeholder="frps.example.com"></div>
+                        <div class="field"><label>端口</label><input class="input mono" style="border-radius: 0" value="7000"></div>
+                      </div>
+                      <div class="field"><label>Token</label><input class="input mono" style="border-radius: 0" type="password" placeholder="与 frps 一致"></div>
+                      <button class="btn btn-secondary" style="border-radius: 0; align-self: flex-start">测试连接</button>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ onboardIsDone }}" hint-placeholder-val="{{ false }}">
+                    <div class="blueprint" style="border-radius: 0; padding: 16px; display: flex; flex-direction: column; gap: 8px">
+                      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                      <div style="font-size: 13.5px">已就绪：控制连接建立，配置写入 frpc.toml。</div>
+                      <div style="font-size: 12px; color: #74787c">下一步可以新建第一条隧道，或从已有 frpc.toml 导入。</div>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="margin-top: auto; display: flex; gap: 8px; align-items: center">
+                  <button class="btn btn-ghost" style="border-radius: 0" onClick="{{ closeOnboard }}">跳过</button>
+                  <div style="margin-left: auto; display: flex; gap: 8px">
+                    <button class="btn btn-secondary" style="border-radius: 0" onClick="{{ prevStep }}">上一步</button>
+                    <button class="btn btn-primary blueprint" style="border-radius: 0" onClick="{{ nextStep }}">
+                      <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+                      {{ nextLabel }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px; align-items: flex-start">
+    <div style="display: flex; align-items: baseline; gap: 12px">
+      <span style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700)">02 / 菜单栏面板</span>
+      <span style="font-size: 12px; color: #6b6f73">点击状态栏图标后的下拉</span>
+    </div>
+    <div style="width: 620px; border: 1px solid #c6c9cd; background: #dedfe1">
+      <div style="height: 26px; display: flex; align-items: center; justify-content: flex-end; gap: 18px; padding: 0 12px; background: rgba(255,255,255,0.65); font-size: 12px; color: #3a3e42; border-bottom: 1px solid #cfd2d5">
+        <span class="mono" style="color: var(--color-accent-800)">⌁ 6.4M</span>
+        <span>Wi-Fi</span><span>100%</span><span class="mono">14:26</span>
+      </div>
+      <div style="padding: 14px 12px 20px; display: flex; justify-content: flex-end">
+        <div style="width: 312px; background: var(--color-bg); border: 1px solid #b9bcc0; box-shadow: 0 18px 36px -14px rgba(29,45,61,0.42); padding: 12px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: center; gap: 8px">
+            <span style="width: 7px; height: 7px; background: #4f8a3d"></span>
+            <span style="font-family: var(--font-heading), sans-serif; font-size: 15px">已连接</span>
+            <span class="mono" style="margin-left: auto; font-size: 11px; color: #74787c">frps.oakline.dev</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px">
+            <div class="blueprint" style="border-radius: 0; padding: 8px 10px">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent)">上行</div>
+              <div class="mono" style="font-size: 17px">1.8 MB/s</div>
+            </div>
+            <div class="blueprint" style="border-radius: 0; padding: 8px 10px">
+              <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+              <div style="font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent)">下行</div>
+              <div class="mono" style="font-size: 17px">6.4 MB/s</div>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; border-top: 1px solid var(--color-divider)">
+            <sc-for list="{{ panelRows }}" as="r" hint-placeholder-count="4">
+              <div style="display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid rgba(29,31,32,0.07)">
+                <span style="width: 6px; height: 6px; flex: none; background: {{ r.dot }}"></span>
+                <span style="font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ r.name }}</span>
+                <span class="mono" style="font-size: 11px; color: #74787c">{{ r.short }}</span>
+                <button style="all: unset; cursor: pointer; width: 32px; height: 17px; padding: 2px; box-sizing: border-box; background: {{ r.trackBg }}; border: 1px solid {{ r.trackBorder }}" onClick="{{ r.toggle }}">
+                  <span style="display: block; width: 11px; height: 11px; background: {{ r.knobBg }}; margin-left: {{ r.knobXs }}; transition: margin-left .16s ease"></span>
+                </button>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 2px; font-size: 13px">
+            <button class="btn btn-secondary btn-block" style="border-radius: 0; margin: 0">打开主窗口</button>
+            <div style="display: flex; justify-content: space-between; padding-top: 6px; font-size: 12px; color: #74787c">
+              <span>暂停全部</span><span class="mono">⌘⇧P</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: #74787c">
+              <span>退出 FrpKit</span><span class="mono">⌘Q</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;defaultView&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;list&quot;,&quot;log&quot;,&quot;stats&quot;,&quot;settings&quot;],&quot;default&quot;:&quot;list&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;行为&quot;},&quot;logAutoScroll&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;行为&quot;}}">
+const ACC = "#5980a6", ACC7 = "#416180", OFF_TRACK = "#d7d8da", OFF_BORDER = "#c2c4c7";
+
+class Component extends DCLogic {
+  state = {
+    view: null,
+    q: "",
+    typeFilter: "全部",
+    logFilter: "全部",
+    autoScroll: true,
+    showNew: false,
+    newType: "tcp",
+    proto: "tcp",
+    showOnboard: false,
+    onboard: 1,
+    switches: [true, true, false, true, false],
+    tunnels: [
+      { id: 1, name: "web-staging", type: "http", route: "127.0.0.1:3000 → staging.oakline.dev", short: ":3000", conns: 12, traffic: "1.24 GB", on: true, state: "运行中" },
+      { id: 2, name: "postgres-tunnel", type: "tcp", route: "127.0.0.1:5432 → frps.oakline.dev:7102", short: ":5432", conns: 3, traffic: "486 MB", on: true, state: "运行中" },
+      { id: 3, name: "ssh-mac-mini", type: "tcp", route: "127.0.0.1:22 → frps.oakline.dev:7022", short: ":22", conns: 1, traffic: "18.6 MB", on: true, state: "运行中" },
+      { id: 4, name: "api-dev", type: "https", route: "127.0.0.1:8443 → api-dev.oakline.dev", short: ":8443", conns: 0, traffic: "72.1 MB", on: false, state: "已停止" },
+      { id: 5, name: "minecraft", type: "udp", route: "127.0.0.1:25565 → frps.oakline.dev:25565", short: ":25565", conns: 0, traffic: "0 B", on: false, state: "已停止" },
+      { id: 6, name: "grafana", type: "http", route: "127.0.0.1:9091 → metrics.oakline.dev", short: ":9091", conns: 2, traffic: "204 MB", on: true, state: "端口被占用", err: true },
+      { id: 7, name: "obs-relay", type: "tcp", route: "127.0.0.1:1935 → frps.oakline.dev:1935", short: ":1935", conns: 1, traffic: "3.10 GB", on: true, state: "运行中" }
+    ],
+    cleared: false
+  };
+
+  logs = [
+    { t: "14:24:02", lvl: "info", msg: "frpc 0.61.1 启动，配置来自 frpc.toml" },
+    { t: "14:24:02", lvl: "info", msg: "尝试连接 frps.oakline.dev:7000（tcp）" },
+    { t: "14:24:03", lvl: "info", msg: "控制连接建立，run id 8f2c1ad4e9" },
+    { t: "14:24:03", lvl: "info", msg: "[web-staging] 代理启动成功，域名 staging.oakline.dev" },
+    { t: "14:24:03", lvl: "info", msg: "[postgres-tunnel] 代理启动成功，远程端口 7102" },
+    { t: "14:24:03", lvl: "info", msg: "[ssh-mac-mini] 代理启动成功，远程端口 7022" },
+    { t: "14:24:04", lvl: "warn", msg: "[grafana] 本地 9091 响应缓慢（1.4s）" },
+    { t: "14:24:11", lvl: "info", msg: "[web-staging] 新连接 203.0.113.44:51422" },
+    { t: "14:25:02", lvl: "error", msg: "[grafana] 本地端口 9091 被占用，1s 后重试" },
+    { t: "14:25:03", lvl: "info", msg: "[grafana] 重试中（1/10）" },
+    { t: "14:25:18", lvl: "info", msg: "心跳正常，rtt 31ms" },
+    { t: "14:25:40", lvl: "warn", msg: "[obs-relay] 上行接近带宽上限 20MB/s" },
+    { t: "14:26:01", lvl: "info", msg: "[postgres-tunnel] 连接关闭 198.51.100.7:44120" },
+    { t: "14:26:12", lvl: "info", msg: "心跳正常，rtt 29ms" }
+  ];
+
+  sw = (on) => ({
+    trackBg: on ? ACC : OFF_TRACK,
+    trackBorder: on ? ACC7 : OFF_BORDER,
+    knobBg: on ? "#ffffff" : "#8f9397",
+    knobX: on ? "18px" : "0px",
+    knobXs: on ? "15px" : "0px"
+  });
+
+  seg = (active, label, go) => ({
+    label,
+    go,
+    bg: active ? ACC : "transparent",
+    fg: active ? "#ffffff" : "#4a4e52"
+  });
+
+  renderVals() {
+    const view = this.state.view || this.props.defaultView || "list";
+    const t = this.state.tunnels;
+    const titles = { list: ["隧道", "7 条代理 · 5 个运行中"], log: ["实时日志", "frpc 标准输出"], stats: ["流量与连接", "近 24 小时"], settings: ["设置", "frpc 客户端配置"] };
+    const nav = [
+      ["list", "01", "隧道", String(t.length)],
+      ["log", "02", "实时日志", "14"],
+      ["stats", "03", "流量统计", ""],
+      ["settings", "04", "设置", ""]
+    ];
+
+    const q = this.state.q.trim().toLowerCase();
+    const tf = this.state.typeFilter;
+    const decorate = (x) => ({
+        ...x,
+        dot: x.err ? "#c0562f" : x.on ? "#4f8a3d" : "#a9adb1",
+        stateColor: x.err ? "#c0562f" : x.on ? "#4f8a3d" : "#8f9397",
+        state: x.err ? x.state : x.on ? "运行中" : "已停止",
+        conns: x.on ? x.conns : "—",
+        ...this.sw(x.on),
+        toggle: () => this.setState((s) => ({ tunnels: s.tunnels.map((y) => (y.id === x.id ? { ...y, on: !y.on, err: false } : y)) }))
+      });
+    const rows = t
+      .filter((x) => (tf === "全部" || x.type === tf) && (!q || (x.name + x.route).toLowerCase().includes(q)))
+      .map(decorate);
+    const panelRows = t.slice(0, 4).map(decorate);
+
+    const lf = this.state.logFilter;
+    const lvlMap = { 信息: "info", 警告: "warn", 错误: "error" };
+    const logLines = (this.state.cleared ? [] : this.logs)
+      .filter((l) => lf === "全部" || l.lvl === lvlMap[lf])
+      .map((l) => ({ ...l, color: l.lvl === "error" ? "#c0562f" : l.lvl === "warn" ? "#a8761f" : ACC7 }));
+
+    const swMeta = [
+      ["开机启动", "登录时以后台方式启动 FrpKit"],
+      ["启动后自动连接", "打开应用即建立控制连接"],
+      ["关闭窗口时退出", "关闭则仅隐藏窗口，保留菜单栏图标"],
+      ["断线自动重连", "指数退避，最多重试 10 次"],
+      ["连接异常时发送通知", "使用 macOS 通知中心"]
+    ];
+
+    const onboardCopy = {
+      1: ["欢迎使用 FrpKit", "FrpKit 是 macOS 上的 frp 客户端。它托管 frpc 进程，把配置变成表单，并在菜单栏显示实时状态。三步即可开始。"],
+      2: ["连接你的 frps", "填写服务器地址与 token。参数会写入 frpc.toml，之后可在设置中随时修改。"],
+      3: ["准备就绪", "控制连接已建立。现在可以新建隧道，把本机端口暴露到公网。"]
+    };
+    const ob = this.state.onboard;
+
+    return {
+      isList: view === "list", isLog: view === "log", isStats: view === "stats", isSettings: view === "settings",
+      viewTitle: titles[view][0], viewSub: titles[view][1],
+      navItems: nav.map(([k, num, label, badge]) => ({
+        num, label, badge,
+        mark: view === k ? ACC : "transparent",
+        bg: view === k ? "rgba(89,128,166,0.16)" : "transparent",
+        fg: view === k ? "#1d2d3d" : "#4a4e52",
+        go: () => this.setState({ view: k })
+      })),
+      q: this.state.q,
+      setQ: (e) => this.setState({ q: e.target.value }),
+      typeFilters: ["全部", "tcp", "udp", "http", "https"].map((x) =>
+        this.seg(this.state.typeFilter === x, x, () => this.setState({ typeFilter: x }))),
+      rows,
+      panelRows,
+      runningCount: t.filter((x) => x.on).length,
+      totalCount: t.length,
+      stopAll: () => this.setState((s) => ({ tunnels: s.tunnels.map((y) => ({ ...y, on: false, err: false })) })),
+      goLog: () => this.setState({ view: "log" }),
+
+      logFilters: ["全部", "信息", "警告", "错误"].map((x) =>
+        this.seg(this.state.logFilter === x, x, () => this.setState({ logFilter: x }))),
+      logLines, logCount: logLines.length,
+      autoScroll: this.props.logAutoScroll ?? this.state.autoScroll,
+      toggleScroll: () => this.setState((s) => ({ autoScroll: !s.autoScroll })),
+      clearLog: () => this.setState({ cleared: true }),
+
+      stats: [
+        { label: "今日流量", value: "9.62 GB", note: "上行 3.1 / 下行 6.5" },
+        { label: "活跃连接", value: "19", note: "峰值 84（12:40）" },
+        { label: "平均延迟", value: "31 ms", note: "过去一小时" },
+        { label: "在线时长", value: "6d 04h", note: "无断线记录" }
+      ],
+      statRows: [
+        { name: "obs-relay", type: "tcp", conns: 1, up: "2.41 GB", down: "690 MB", ping: "28 ms" },
+        { name: "web-staging", type: "http", conns: 12, up: "312 MB", down: "948 MB", ping: "33 ms" },
+        { name: "postgres-tunnel", type: "tcp", conns: 3, up: "186 MB", down: "300 MB", ping: "30 ms" },
+        { name: "grafana", type: "http", conns: 2, up: "64 MB", down: "140 MB", ping: "41 ms" },
+        { name: "api-dev", type: "https", conns: 0, up: "28 MB", down: "44 MB", ping: "—" },
+        { name: "ssh-mac-mini", type: "tcp", conns: 1, up: "9.2 MB", down: "9.4 MB", ping: "27 ms" }
+      ],
+
+      protoOpts: ["tcp", "kcp", "quic", "websocket"].map((x) =>
+        this.seg(this.state.proto === x, x, () => this.setState({ proto: x }))),
+      switches: swMeta.map(([label, note], i) => ({
+        label, note,
+        ...this.sw(this.state.switches[i]),
+        toggle: () => this.setState((s) => ({ switches: s.switches.map((v, j) => (j === i ? !v : v)) }))
+      })),
+
+      showNew: this.state.showNew,
+      openNew: () => this.setState({ showNew: true }),
+      closeNew: () => this.setState({ showNew: false }),
+      newTypes: ["tcp", "udp", "http", "https"].map((x) =>
+        this.seg(this.state.newType === x, x, () => this.setState({ newType: x }))),
+      newIsPort: this.state.newType === "tcp" || this.state.newType === "udp",
+      newIsHttp: this.state.newType === "http" || this.state.newType === "https",
+      newPreview: `[[proxies]]\nname = "web-staging"\ntype = "${this.state.newType}"\nlocalIP = "127.0.0.1"`,
+
+      showOnboard: this.state.showOnboard,
+      openOnboard: () => this.setState({ showOnboard: true, onboard: 1 }),
+      closeOnboard: () => this.setState({ showOnboard: false }),
+      onboard: ob,
+      onboardTitle: onboardCopy[ob][0],
+      onboardBody: onboardCopy[ob][1],
+      onboardIsServer: ob === 2,
+      onboardIsDone: ob === 3,
+      nextLabel: ob === 3 ? "开始使用" : "继续",
+      nextStep: () => (ob === 3 ? this.setState({ showOnboard: false }) : this.setState({ onboard: ob + 1 })),
+      prevStep: () => this.setState({ onboard: Math.max(1, ob - 1) }),
+      steps: [
+        ["1", "欢迎", "FrpKit 能做什么"],
+        ["2", "连接服务器", "地址、端口与 token"],
+        ["3", "完成", "新建第一条隧道"]
+      ].map(([n, label, note], i) => ({ n, label, note, op: ob === i + 1 ? 1 : 0.45 }))
+    };
+  }
+}
+</script>
+</body>
+</html>

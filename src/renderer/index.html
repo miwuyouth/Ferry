@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'">
+<title>FrpKit</title>
+<link rel="stylesheet" href="css/apple.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body class="is-key">
+
+<div class="shell">
+
+  <header class="chrome">
+    <span class="chrome-title" id="viewTitle">隧道</span>
+    <span class="chrome-sub" id="viewSub"></span>
+    <span class="chrome-spacer"></span>
+    <div class="chrome-right">
+      <span class="tag tag-accent" id="connTag">未运行</span>
+      <button class="btn btn-secondary" id="btnPower">连接</button>
+      <button class="btn btn-secondary" id="btnOnboard">重新引导</button>
+    </div>
+  </header>
+
+  <div class="body">
+
+    <!-- ══ 左栏 ══ -->
+    <aside class="rail">
+      <div class="rail-group">
+        <div class="rail-label">工作区</div>
+        <button class="nav-item is-active" data-go="list">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M2 5.5H13M13 5.5L10 2.5M13 5.5L10 8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 10.5H3M3 10.5L6 7.5M3 10.5L6 13.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="nav-label">隧道</span><span class="mono nav-badge" id="navCountTunnels"></span>
+        </button>
+        <button class="nav-item" data-go="log">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M2 4H14M2 8H11M2 12H14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <span class="nav-label">实时日志</span><span class="mono nav-badge" id="navCountLogs"></span>
+        </button>
+        <button class="nav-item" data-go="stats">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M3 11V13M8 7V13M13 3V13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span class="nav-label">流量统计</span><span class="mono nav-badge"></span>
+        </button>
+        <button class="nav-item" data-go="settings">
+          <svg class="nav-icon" viewBox="0 0 16 16" fill="none"><path d="M2 4H14M2 8H14M2 12H14" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><circle cx="6" cy="4" r="1.6" fill="currentColor"/><circle cx="11" cy="8" r="1.6" fill="currentColor"/><circle cx="5" cy="12" r="1.6" fill="currentColor"/></svg>
+          <span class="nav-label">设置</span><span class="mono nav-badge"></span>
+        </button>
+      </div>
+
+      <div class="rail-group">
+        <div class="rail-label">服务器</div>
+        <div class="server-card">
+          <div class="mono server-host" id="railHost">未配置</div>
+          <div class="server-meta" id="railMeta">—</div>
+          <div class="server-beat">
+            <span class="dot" id="railDot"></span><span id="railBeat">未运行</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rail-foot">
+        <div class="rate-row"><span>上行</span><span class="mono" id="railUp">—</span></div>
+        <div class="rate-bar"><i id="railUpBar" style="width:0%"></i></div>
+        <div class="rate-row"><span>下行</span><span class="mono" id="railDown">—</span></div>
+        <div class="rate-bar down"><i id="railDownBar" style="width:0%"></i></div>
+      </div>
+    </aside>
+
+    <!-- ══ 主区 ══ -->
+    <section class="main">
+
+      <!-- ── 01 隧道 ── -->
+      <div class="view is-active" data-view="list">
+        <div class="toolbar">
+          <input class="input" id="q" placeholder="搜索名称、端口或域名" style="width:260px">
+          <div class="seg" id="typeFilters"></div>
+          <div class="spacer">
+            <button class="btn btn-secondary" id="btnStopAll">全部停止</button>
+            <button class="btn btn-primary" id="btnNew">＋ 新建隧道</button>
+          </div>
+        </div>
+        <div class="thead">
+          <span>名称</span><span>类型</span><span>本地 → 远程</span><span>连接数</span><span>今日流量</span><span style="text-align:right">启用</span>
+        </div>
+        <div class="rows" id="rows"></div>
+        <div class="statusbar">
+          <span id="listSummary">共 0 个隧道</span>
+          <span class="mono path" id="configPath"></span>
+          <button class="btn btn-ghost" style="margin-left:auto" data-go="log">查看日志</button>
+        </div>
+      </div>
+
+      <!-- ── 02 实时日志 ── -->
+      <div class="view" data-view="log">
+        <div class="toolbar">
+          <div class="seg" id="logFilters"></div>
+          <label class="check"><input type="checkbox" id="autoScroll" checked>自动滚动</label>
+          <div class="spacer">
+            <button class="btn btn-secondary" id="btnLogExport">导出</button>
+            <button class="btn btn-secondary" id="btnLogClear">清空</button>
+          </div>
+        </div>
+        <div class="mono log-scroll" id="logScroll"></div>
+        <div class="statusbar">
+          <span id="logStatus">日志级别 info · 保留 7 天 · 0 行</span>
+        </div>
+      </div>
+
+      <!-- ── 03 流量统计 ── -->
+      <div class="view" data-view="stats">
+        <div class="scroll">
+          <div class="stat-grid" id="statCards"></div>
+
+          <div class="chart-panel">
+            <div class="chart-head">
+              <h4 style="margin:0">近 24 小时流量</h4>
+              <span class="text-muted" style="font-size:11px" id="chartNote">浅色为上行，深色为下行</span>
+            </div>
+            <div class="chart" id="chart"></div>
+            <div class="mono chart-axis" id="chartAxis"></div>
+          </div>
+
+          <div class="stats-table-wrap">
+            <h4 style="padding-top:12px">按隧道</h4>
+            <table class="table">
+              <thead>
+                <tr><th>隧道</th><th>类型</th><th>连接数</th><th>上行</th><th>下行</th><th>状态</th></tr>
+              </thead>
+              <tbody id="statRows"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 04 设置 ── -->
+      <div class="view" data-view="settings">
+        <div class="settings">
+          <div class="settings-inner">
+
+            <div>
+              <h4>服务器</h4>
+              <p class="sec-note">frpc 与 frps 建立控制连接的参数。改动这一组需要重启 frpc 进程。</p>
+              <div class="setting-card">
+                <div class="grid-2">
+                  <div class="field"><label>服务器地址</label><input class="input" id="sServerAddr" placeholder="frps.example.com"></div>
+                  <div class="field"><label>端口</label><input class="input mono" id="sServerPort" placeholder="7000"></div>
+                </div>
+                <div class="field" style="margin-top:12px"><label>Token</label><input class="input mono" id="sToken" type="password" placeholder="与 frps 的 auth.token 一致"></div>
+                <div class="field" style="margin-top:12px">
+                  <label>传输协议</label>
+                  <div class="seg" id="protoOpts" style="margin-top:4px"></div>
+                </div>
+                <div style="margin-top:12px; display:flex; gap:8px; align-items:center">
+                  <button class="btn btn-secondary" id="btnTest">测试连接</button>
+                  <span class="hint" id="testHint"></span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4>启动与常驻</h4>
+              <div class="setting-card">
+                <div class="sw-list" id="swList"></div>
+              </div>
+            </div>
+
+            <div>
+              <h4>流量统计来源</h4>
+              <p class="sec-note">frpc 本身不统计字节数和连接数，这些计数器在 frps 上。填好 frps 面板凭据后，隧道列表和统计页才会有真实数字，否则显示 —。</p>
+              <div class="setting-card">
+                <label class="check" style="margin-bottom:12px"><input type="checkbox" id="sDashEnabled">从 frps 面板读取流量与连接数</label>
+                <div class="grid-2">
+                  <div class="field"><label>面板地址</label><input class="input mono" id="sDashAddr" placeholder="与服务器地址相同"></div>
+                  <div class="field"><label>端口</label><input class="input mono" id="sDashPort" placeholder="7500"></div>
+                </div>
+                <div class="grid-2" style="margin-top:12px">
+                  <div class="field"><label>用户名</label><input class="input mono" id="sDashUser" placeholder="admin"></div>
+                  <div class="field"><label>密码</label><input class="input mono" id="sDashPassword" type="password"></div>
+                </div>
+                <div class="hint" id="dashHint"></div>
+              </div>
+            </div>
+
+            <div>
+              <h4>代理</h4>
+              <div class="setting-card">
+                <div class="field"><label>出站代理（可选）· transport.proxyURL</label><input class="input mono" id="sProxyUrl" placeholder="socks5://127.0.0.1:1080"></div>
+              </div>
+            </div>
+
+            <div>
+              <h4>frpc 与版本</h4>
+              <div class="setting-card about">
+                <div style="flex:1; min-width:0">
+                  <div style="font-size:13px" id="aboutVersions">FrpKit · frpc</div>
+                  <div class="mono ellipsis text-muted" style="font-size:11.5px" id="aboutPath">—</div>
+                </div>
+                <button class="btn btn-secondary" id="btnLocate">选择 frpc…</button>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:8px; padding-bottom:8px; flex-wrap:wrap; align-items:center">
+              <button class="btn btn-primary" id="btnSave">保存并重载 frpc</button>
+              <button class="btn btn-secondary" id="btnExport">导出 frpc.toml</button>
+              <button class="btn btn-secondary" id="btnImport">导入 frpc.toml</button>
+              <button class="btn btn-ghost" id="btnReveal">在访达中显示</button>
+              <span class="hint" id="saveHint"></span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 新建隧道 ── -->
+      <div class="overlay" id="newSheet">
+        <div class="sheet">
+          <div>
+            <h3 style="margin:0 0 2px">新建隧道</h3>
+            <div class="sheet-sub">保存后立即写入 frpc.toml 并热重载。</div>
+          </div>
+          <div class="field">
+            <label>类型</label>
+            <div class="seg" id="newTypes" style="margin-top:4px"></div>
+          </div>
+          <div class="field"><label>名称</label><input class="input" id="nName" placeholder="例如 web-staging"></div>
+          <div class="grid-2s">
+            <div class="field"><label>本地地址</label><input class="input mono" id="nLocalIP" value="127.0.0.1"></div>
+            <div class="field"><label>本地端口</label><input class="input mono" id="nLocalPort" placeholder="3000"></div>
+          </div>
+          <div class="field" id="fRemotePort"><label>远程端口</label><input class="input mono" id="nRemotePort" placeholder="7100"></div>
+          <div class="field" id="fDomains"><label>自定义域名（多个用逗号分隔）</label><input class="input mono" id="nDomains" placeholder="staging.example.com"></div>
+          <div class="mono preview" id="newPreview"></div>
+          <div class="hint" id="newHint"></div>
+          <div class="sheet-actions">
+            <button class="btn btn-secondary" id="btnNewCancel">取消</button>
+            <button class="btn btn-primary" id="btnNewSave">保存隧道</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── 首次引导 ── -->
+      <div class="onboard" id="onboard">
+        <div class="onboard-rail">
+          <div class="onboard-brand">FrpKit</div>
+          <div class="onboard-steps" id="obSteps"></div>
+          <div class="onboard-foot">首次启动引导 · 可随时在标题栏重新运行</div>
+        </div>
+        <div class="onboard-main">
+          <div class="onboard-kicker">第 <span id="obN">1</span> / 3 步</div>
+          <h1 style="font-size:28px; margin:6px 0 10px" id="obTitle"></h1>
+          <p class="onboard-body" id="obBody"></p>
+
+          <div class="onboard-slot">
+            <div id="obServer" hidden>
+              <div style="display:flex; flex-direction:column; gap:12px">
+                <div class="grid-2s">
+                  <div class="field"><label>服务器地址</label><input class="input mono" id="obAddr" placeholder="frps.example.com"></div>
+                  <div class="field"><label>端口</label><input class="input mono" id="obPort" value="7000"></div>
+                </div>
+                <div class="field"><label>Token</label><input class="input mono" id="obToken" type="password" placeholder="与 frps 一致"></div>
+                <div style="display:flex; gap:10px; align-items:center">
+                  <button class="btn btn-secondary" id="obTest">测试连接</button>
+                  <span class="hint" id="obHint"></span>
+                </div>
+              </div>
+            </div>
+            <div id="obDone" hidden>
+              <div class="setting-card" style="display:flex; flex-direction:column; gap:8px">
+                <div style="font-size:13.5px" id="obDoneTitle">已就绪：控制连接建立，配置写入 frpc.toml。</div>
+                <div class="text-muted" style="font-size:12px">下一步可以新建第一条隧道，或从已有 frpc.toml 导入。</div>
+                <div style="display:flex; gap:8px; margin-top:4px">
+                  <button class="btn btn-secondary" id="obImport">导入 frpc.toml</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="onboard-actions">
+            <button class="btn btn-ghost" id="obSkip">跳过</button>
+            <div style="margin-left:auto; display:flex; gap:8px">
+              <button class="btn btn-secondary" id="obPrev">上一步</button>
+              <button class="btn btn-primary" id="obNext"><span id="obNextLabel">继续</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</div>
+
+<script src="js/util.js"></script>
+<script src="js/views/tunnels.js"></script>
+<script src="js/views/logs.js"></script>
+<script src="js/views/stats.js"></script>
+<script src="js/views/settings.js"></script>
+<script src="js/onboarding.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

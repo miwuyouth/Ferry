@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'">
+<title>FrpKit</title>
+<link rel="stylesheet" href="css/apple.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body class="panel-body">
+
+<div class="panel">
+  <div class="panel-head">
+    <span class="dot" id="pDot"></span>
+    <span class="panel-state" id="pState">未运行</span>
+    <span class="mono panel-host" id="pHost">—</span>
+  </div>
+
+  <div class="panel-rates">
+    <div class="panel-rate">
+      <div class="panel-rate-label">上行</div>
+      <div class="mono panel-rate-value" id="pUp">—</div>
+    </div>
+    <div class="panel-rate">
+      <div class="panel-rate-label">下行</div>
+      <div class="mono panel-rate-value" id="pDown">—</div>
+    </div>
+  </div>
+
+  <div class="panel-list" id="pList"></div>
+
+  <div class="panel-menu">
+    <button class="btn btn-secondary btn-block" id="pOpen" style="margin:0">打开主窗口</button>
+    <button class="panel-item" id="pPause"><span id="pPauseLabel">暂停全部</span><span class="mono">⌘⇧P</span></button>
+    <button class="panel-item" id="pQuit"><span>退出 FrpKit</span><span class="mono">⌘Q</span></button>
+  </div>
+</div>
+
+<script src="js/util.js"></script>
+<script src="js/panel.js"></script>
+</body>
+</html>

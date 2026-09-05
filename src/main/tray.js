@@ -1,0 +1,121 @@
+'use strict';
+// 菜单栏图标 + 点击弹出的面板窗口（设计稿的 02 号画板）。
+
+const { Tray, BrowserWindow, nativeImage, screen, app } = require('electron');
+const path = require('path');
+
+const PANEL_W = 312;
+const PANEL_H = 380;   // 首帧的兜底高度，渲染层量出真实内容高度后会覆盖它
+const PANEL_MIN = 220;
+const PANEL_MAX = 620;
+
+let tray = null;
+let panel = null;
+let panelH = PANEL_H;
+
+function fmtRate(bytesPerSec) {
+  if (!bytesPerSec || bytesPerSec < 1024) return '';
+  if (bytesPerSec < 1024 * 1024) return `${(bytesPerSec / 1024).toFixed(0)}K`;
+  return `${(bytesPerSec / 1048576).toFixed(1)}M`;
+}
+
+function createPanel() {
+  panel = new BrowserWindow({
+    width: PANEL_W,
+    height: PANEL_H,
+    show: false,
+    frame: false,
+    resizable: false,
+    movable: false,
+    skipTaskbar: true,
+    alwaysOnTop: true,
+    fullscreenable: false,
+    transparent: true,
+    backgroundColor: '#00000000',
+    hasShadow: true,
+    // 真·原生毛玻璃——跟菜单栏其它下拉面板用的是同一种材质，
+    // 页面自己只需要给个半透明底色叠在它上面（见 app.css 面板一节）。
+    vibrancy: 'popover',
+    visualEffectState: 'active',
+    webPreferences: {
+      preload: path.join(__dirname, '..', 'preload', 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: false
+    }
+  });
+  panel.loadFile(path.join(__dirname, '..', 'renderer', 'panel.html'));
+  // 点到别处就收起来——菜单栏面板该有的行为。
+  panel.on('blur', () => panel.hide());
+  panel.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  return panel;
+}
+
+function positionPanel() {
+  const b = tray.getBounds();
+  const display = screen.getDisplayNearestPoint({ x: b.x, y: b.y });
+  const area = display.workArea;
+  // 对齐图标中线，再夹回屏幕内，避免贴着右边缘时露出去。
+  let x = Math.round(b.x + b.width / 2 - PANEL_W / 2);
+  x = Math.max(area.x + 8, Math.min(x, area.x + area.width - PANEL_W - 8));
+  const y = Math.round(b.y + b.height + 6);
+  // 别顶到屏幕底边
+  const h = Math.min(panelH, area.y + area.height - y - 8);
+  panel.setBounds({ x, y, width: PANEL_W, height: Math.max(PANEL_MIN, h) });
+}
+
+function togglePanel() {
+  if (!panel) createPanel();
+  if (panel.isVisible()) { panel.hide(); return; }
+  positionPanel();
+  panel.show();
+  panel.focus();
+}
+
+function createTray({ onShow, onQuit }) {
+  const iconPath = path.join(__dirname, '..', '..', 'resources', 'trayTemplate.png');
+  let image = nativeImage.createFromPath(iconPath);
+  if (image.isEmpty()) {
+    // 图标文件缺失也不该让应用起不来——退回一个空图，靠标题文字露出来。
+    image = nativeImage.createEmpty();
+  }
+  image.setTemplateImage(true); // 跟随浅色/深色菜单栏自动反色
+
+  tray = new Tray(image);
+  tray.setToolTip('FrpKit');
+  tray.on('click', togglePanel);
+  tray.on('right-click', () => { onShow(); });
+
+  createPanel();
+
+  return {
+    update(state, metrics) {
+      const rate = metrics ? fmtRate(metrics.rate.down) : '';
+      tray.setTitle(rate ? ` ${rate}` : '');
+      tray.setToolTip(
+        state.connected ? 'FrpKit — 已连接' : state.running ? 'FrpKit — 连接中' : 'FrpKit — 未运行'
+      );
+    },
+    hidePanel() { if (panel && panel.isVisible()) panel.hide(); },
+
+    // 隧道多的时候面板要长一点，少的时候不该留一片空白。
+    // 高度由渲染层量完内容报上来。
+    setPanelHeight(h) {
+      const next = Math.max(PANEL_MIN, Math.min(PANEL_MAX, Math.round(h)));
+      if (next === panelH) return;
+      panelH = next;
+      if (panel && panel.isVisible()) positionPanel();
+    },
+    showMain: onShow,
+    quit: onQuit
+  };
+}
+
+function destroyTray() {
+  if (panel && !panel.isDestroyed()) panel.destroy();
+  if (tray && !tray.isDestroyed()) tray.destroy();
+  panel = null;
+  tray = null;
+}
+
+module.exports = { createTray, destroyTray };
