@@ -8,7 +8,8 @@
   "license": "MIT",
   "author": "miwuyouth <miwuyouth@gmail.com>",
   "scripts": {
-    "start": "electron .",
+    "start": "node scripts/patch-electron-plist.js && electron .",
+    "postinstall": "node scripts/patch-electron-plist.js",
     "icons": "node scripts/make-icons.js",
     "dist": "electron-builder --mac"
   },

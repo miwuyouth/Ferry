@@ -14,6 +14,9 @@ const toml = require('./toml');
 const i18n = require('../shared/i18n');
 const { t } = i18n;
 
+app.name = 'Ferry';
+app.setName('Ferry');
+
 let store, logs, frpc, metrics, mainWindow, tray;
 let quitting = false;
 
