@@ -38,7 +38,9 @@ function createMainWindow() {
   });
 
   mainWindow.loadFile(path.join(__dirname, '..', 'renderer', 'index.html'));
-  mainWindow.once('ready-to-show', () => mainWindow.show());
+  // Dock tile 是窗口真正出现之后才建起来的，whenReady 里设的那次可能早于它，
+  // 所以这里再设一次。
+  mainWindow.once('ready-to-show', () => { mainWindow.show(); applyDockIcon(); });
 
   mainWindow.on('close', (e) => {
     // 「关闭窗口时退出」关掉的话，关窗只是把窗口藏起来，菜单栏图标还在。
@@ -64,8 +66,10 @@ function applyDockIcon() {
 function showMainWindow() {
   if (!mainWindow) createMainWindow();
   else { mainWindow.show(); mainWindow.focus(); }
-  app.dock?.show();
-  applyDockIcon();
+  // dock.show() 是异步的，而且会按 bundle 里的图标重建 Dock tile。本来就显示着的时候
+  // 调它，等于白白把图标冲回 electron 的原子 logo —— 所以只在真的被隐藏时才调，
+  // 并且等它 resolve 之后再把图标设回来。
+  if (app.dock && !app.dock.isVisible()) app.dock.show().then(applyDockIcon);
 }
 
 // —— 往渲染进程推 ————————————————————————————————————————
