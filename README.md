@@ -1,134 +1,101 @@
 <p align="center">
-  <img src="resources/icon.png" width="120" height="120" alt="Ferry">
+  <img src="resources/icon.png" width="128" height="128" alt="Ferry Logo">
 </p>
 
 <h1 align="center">Ferry</h1>
 
-<p align="center">macOS 上的 frp 客户端：托管 frpc 进程，用表单管理配置，在菜单栏查看实时状态。</p>
-
 <p align="center">
-  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
-  <img alt="Platform: macOS" src="https://img.shields.io/badge/platform-macOS-lightgrey.svg">
-  <a href="https://github.com/miwuyouth/Ferry/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/miwuyouth/Ferry?include_prereleases"></a>
+  专为 macOS 打造的高颜值、轻量级 FRP 桌面客户端
 </p>
 
-## 特性
+<p align="center">
+  <a href="https://github.com/miwuyouth/Ferry/releases/latest"><img alt="Latest Release" src="https://img.shields.io/github/v/release/miwuyouth/Ferry"></a>
+  <img alt="Platform: macOS" src="https://img.shields.io/badge/Platform-macOS-lightgrey.svg">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-blue.svg"></a>
+</p>
 
-- 托管 `frpc` 子进程：启动、停止、崩溃后指数退避重连，改配置后通过 admin 接口热重载
-- 表单化配置：隧道的增删改查和启停都在界面上完成，不用手写 `frpc.toml`
-- 菜单栏面板：连接状态、每条隧道的运行态和实时日志
-- 流量统计来自 `frps` 面板接口；未配置面板时相关指标显示为 `—`
-- 原生 macOS 观感：系统字体、systemBlue、连续圆角、vibrancy，跟随浅色/深色模式
-- 配置支持导入导出，`frpc` 二进制路径可自动定位或手动指定
+---
 
-## 安装
+**Ferry** 是一款专为 macOS 设计的轻量级 `frpc` 桌面客户端。旨在摆脱繁琐的手动编辑配置文件与终端命令行操作，将代理隧道的管理转变为直观优雅的 macOS 原生图形界面体验，并在菜单栏实时展示连接状态与关键指标。
 
-### 下载构建产物
+## ✨ 特性
 
-在 [Releases](https://github.com/miwuyouth/Ferry/releases/latest) 下载对应架构的 dmg：Apple Silicon 用 `-arm64.dmg`，Intel 用不带架构后缀的那个。
+- 🍏 **macOS 原生体验**：严格遵循 Apple 界面设计规范，完美适配浅色与深色模式，原生菜单栏常驻与快捷呼出。
+- 🚀 **进程托管与自愈**：全自动守护 `frpc` 子进程，支持开机自启、掉线智能重试与崩溃自动恢复。
+- 🛠️ **可视化隧道管理**：表单化配置 TCP、UDP、HTTP、HTTPS 代理规则，支持单条隧道独立启停与动态热重载。
+- 📊 **状态与流量监控**：实时查看连接状态、平均延迟、在线时长与网络吞吐，提供结构化的运行日志查看器。
+- 🌐 **国际化支持**：内置多语言支持（简体中文 / 英文），可跟随系统偏好或手动切换。
+- 🔄 **配置灵活导入导出**：支持标准 `frpc.toml` 格式的导入与导出，方便在多台设备间快速同步。
 
-应用目前没有 Apple Developer 签名，首次打开会被 Gatekeeper 拦下。右键点击 app 选择「打开」，在弹窗中再次点击「打开」即可，只需操作一次。
+---
 
-### 从源码运行
+## 📥 下载与安装
 
-需要 Node.js 18+ 和本机的 `frpc`（可用 `brew install frp` 安装）。
+### 方式一：直接下载安装包（推荐）
+
+访问 [GitHub Releases](https://github.com/miwuyouth/Ferry/releases/latest) 下载最新版本的 `.dmg` 安装文件：
+
+* **Apple Silicon (M 系列芯片)**：请下载 `Ferry-x.x.x-arm64.dmg`
+* **Intel 芯片**：请下载 `Ferry-x.x.x.dmg`
+
+> **首次打开提示「无法打开」？**  
+> 由于应用尚未配置付费的 Apple 开发者证书签名，首次打开如遇 macOS Gatekeeper 拦截，请在 Finder 中对应用点击 **右键 -> 打开**，并在弹出的确认对话框中再次点击「打开」即可（仅需操作一次）。
+
+---
+
+### 方式二：从源码构建
+
+确保本地已安装 **Node.js (18+)** 和 **frpc**（可通过 `brew install frp` 安装）：
 
 ```bash
+# 克隆仓库
 git clone https://github.com/miwuyouth/Ferry.git
-cd ferry
+cd Ferry
+
+# 安装依赖
 npm install
+
+# 启动开发模式
 npm start
+
+# 打包为 macOS 应用 (DMG)
+npm run dist
 ```
 
-若 `npm install` 卡在下载 Electron 二进制（走 GitHub releases，国内网络常报 `socket hang up`），可以指定镜像重跑安装脚本：
+---
 
-```bash
-ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/ node node_modules/electron/install.js
-```
+## ⚙️ 常见问题
 
-仓库没有把镜像写进 `.npmrc`，二进制来源交由使用者自行决定。
+<details>
+<summary><b>1. 找不到 frpc 可执行文件怎么办？</b></summary>
+Ferry 会优先在标准系统路径（如 <code>/opt/homebrew/bin</code>、<code>/usr/local/bin</code> 等）中自动查找。如果你的 frpc 放在自定义目录，可以在应用内的「设置」页面点击「选择 frpc…」手动指定路径。
+</details>
 
-Ferry 查找 `frpc` 的顺序：设置中手动指定的路径 → 打包进 app 的 `resources/frpc` → `/opt/homebrew/bin` → `/usr/local/bin` → `/opt/local/bin` → `/usr/bin`。都找不到时会在设置页提示，并提供「选择 frpc…」。
+<details>
+<summary><b>2. 为什么今日流量和连接数显示为 "—"？</b></summary>
+frp 的流量统计数据是由服务端（frps）统计的。如需查看流量与连接数曲线，请在「设置」中的「流量统计来源」填入你的 frps 面板地址与管理凭据即可。
+</details>
 
-## 打包与发布
+<details>
+<summary><b>3. 配置文件保存在哪里？</b></summary>
+所有配置与本地日志均安全存放在 macOS 标准数据目录：  
+<code>~/Library/Application Support/Ferry/</code>
+</details>
 
-本地打包：`npm run dist`。electron-builder 会为 x64 与 arm64 各生成一份 dmg 和 zip，输出到 `dist/`。
+---
 
-推送 `v*.*.*` 形式的 tag 时，`.github/workflows/release.yml` 会在 macOS runner 上执行 `npm run dist -- --publish always`，把四份产物上传到对应 tag 的 GitHub Release，使用仓库自带的 `GITHUB_TOKEN`，无需额外配置密钥：
+## 🤝 参与贡献
 
-```bash
-git tag v1.0.1
-git push origin v1.0.1
-```
+欢迎提交 Issue 反馈问题或建议，也欢迎提交 Pull Request 共同改进项目！
 
-该 workflow 也支持在 Actions 页手动触发（`workflow_dispatch`），不打 tag 也能跑一次打包验证。
+1. Fork 本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交修改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送分支 (`git push origin feature/AmazingFeature`)
+5. 发起 Pull Request
 
-## 数据来源
+---
 
-frp 的客户端和服务端职责不同，界面上各项数据的来源如下：
+## 📄 开源许可
 
-| 界面数据 | 来源 |
-| --- | --- |
-| 隧道运行态、启动报错 | `frpc` 本地 admin 接口 `GET /api/status` |
-| 实时日志 | `frpc` 子进程的 stdout/stderr，逐行解析 |
-| 控制连接状态、run id | 从日志中识别 `login to server success` 等事件 |
-| 平均延迟 | 向 `serverAddr:serverPort` 拨一次 TCP，取握手耗时，按一小时滚动平均 |
-| 在线时长、断线次数 | 进程存活时间 + 连接状态翻转计数 |
-| 连接数、今日流量、24 小时曲线 | `frps` 面板接口 `GET /api/proxy/{tcp,udp,http,https}` |
-
-最后一行需要注意：`frpc` 不统计字节数和连接数，这些计数器在服务端。因此设置里有「流量统计来源」一节，填入 frps 面板地址和凭据后才有数据，未填写时这些指标显示为 `—`。
-
-24 小时曲线由 Ferry 在本地按小时累计：面板返回的是「今日累计」，Ferry 做差分后存进 `store.json` 的 24 个小时桶，因此曲线只覆盖 Ferry 运行过的时段。
-
-日志中的消息保留 `frpc` 输出的英文原文，界面 chrome 和 Ferry 自身输出的文案为中文。
-
-## 隧道启停的实现
-
-frp 没有「运行时停用某条代理」的概念。开关关闭时，Ferry 会把这条 proxy 从 `frpc.toml` 中移除，再通过 admin 接口 `GET /api/reload` 热重载；重新打开时写回。
-
-修改服务器地址、token、传输协议等不支持热重载，Ferry 会重启 `frpc` 进程。设置页的按钮上会标明当前改动属于哪一种。
-
-## 文件位置
-
-配置和状态位于 `~/Library/Application Support/Ferry/`：
-
-- `frpc.toml`：生成的配置，权限 0600（包含 token）
-- `store.json`：设置、隧道列表、流量小时桶
-- `frpc.log`：日志落盘，保留 7 天
-
-admin 接口每次启动重新选择一个空闲端口，口令随机生成且不落盘，仅监听 `127.0.0.1` 供 Ferry 自身使用。
-
-## 项目结构
-
-```
-src/
-├── main/                Electron 主进程
-│   ├── main.js          生命周期、窗口、IPC
-│   ├── frpc.js          子进程看护：启停、指数退避重连、热重载、admin 接口
-│   ├── toml.js          frpc.toml 序列化与解析（导入用）
-│   ├── store.js         持久化
-│   ├── logbuf.js        stdout -> 结构化日志行
-│   ├── metrics.js       采样层：frpc 状态 + frps 面板 + TCP 拨测
-│   └── tray.js          菜单栏图标与面板窗口
-├── preload/preload.js   contextBridge，渲染层唯一出口（window.ferry.*）
-└── renderer/
-    ├── index.html       主窗口
-    ├── panel.html       菜单栏面板
-    ├── css/apple.css    设计系统：token + 组件基础类
-    ├── css/app.css      页面层
-    └── js/…             各视图，原生 DOM，无框架
-```
-
-渲染层启用 `contextIsolation`、关闭 `nodeIntegration`，并设有 CSP（`connect-src 'none'`，页面不发起任何网络请求，全部走 IPC）。字体使用系统自带的 San Francisco / PingFang SC（`-apple-system`），不依赖外部 CDN。
-
-## 贡献
-
-欢迎提交 issue 和 PR。项目目前没有测试套件，提交改动前请至少：
-
-1. 用 `npm start` 手动验证改动涉及的界面和流程；
-2. 涉及 `frpc.toml` 序列化的改动，跑一遍 `npm run dist` 确认打包正常；
-3. 在 PR 中说明改动原因。新增的字段或图表如果没有真实数据来源，请显示空状态。
-
-## License
-
-[MIT](LICENSE)
+本项目基于 [MIT License](LICENSE) 开源。
