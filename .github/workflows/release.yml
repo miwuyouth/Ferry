@@ -16,6 +16,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -31,9 +33,33 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run dist -- --publish always
 
-      - name: Ensure release is published
+      - name: Publish release and generate changelog
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release edit "${{ github.ref_name }}" --draft=false --latest || true
+          TAG_NAME="${{ github.ref_name }}"
+          PREV_TAG=$(git describe --tags --abbrev=0 "${TAG_NAME}^" 2>/dev/null || true)
+          TAG_MSG=$(git tag -l --format='%(contents)' "$TAG_NAME" | sed '/^-----BEGIN PGP/q' | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba')
+
+          {
+            if [ -n "$TAG_MSG" ]; then
+              echo "$TAG_MSG"
+              echo ""
+              echo "---"
+              echo ""
+            fi
+
+            echo "### 变更记录 (Changelog)"
+            echo ""
+            if [ -n "$PREV_TAG" ]; then
+              git log "${PREV_TAG}..${TAG_NAME}" --pretty=format:"* %s ([%h](https://github.com/${{ github.repository }}/commit/%H))" --no-merges
+              echo ""
+              echo ""
+              echo "**完整差异对比**: https://github.com/${{ github.repository }}/compare/${PREV_TAG}...${TAG_NAME}"
+            else
+              git log "${TAG_NAME}" --pretty=format:"* %s ([%h](https://github.com/${{ github.repository }}/commit/%H))" --no-merges
+            fi
+          } > /tmp/release-notes.md
+
+          gh release edit "$TAG_NAME" --draft=false --latest --notes-file /tmp/release-notes.md || true
