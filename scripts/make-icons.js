@@ -143,17 +143,21 @@ function trayIcon(scale) {
 // 应用图标：systemBlue 底 + 连续圆角（squircle）+ 白色双向箭头——
 // 跟托盘图标、导航栏图标同一个语汇（隧道两端都在收发），扁平无边框。
 //
-// 关键是「本体不铺满画布」：Big Sur 之后的 macOS 图标模板，1024 的画布里本体只占
-// 824，四边各留 100 的空白，圆角半径 185.4。少了这圈空白，图标在 Dock 里会比左右
-// 邻居大一圈、显得发胀 —— 系统图标全都是按这个格子画的。
+// 形状不是拍脑袋定的：把系统自带图标（/System/Applications 里的 Calculator、Notes）
+// 转成 1024 的 PNG，量它们的角部轮廓拟合出来的 —— 本体 814（画布的 79.5%，本体不
+// 铺满画布，否则在 Dock 里比左右邻居大一圈），圆角半径 208（本体的 25.6%），
+// 超椭圆指数 2.4。指数这项最容易画错：4 已经接近方角，系统图标其实很接近正圆。
+const BODY = 814 / 1024;
+const RADIUS = 0.256;  // 相对本体
+const N = 2.4;
+
 function drawAppIcon(c, size) {
   const ACC = [0, 122, 255, 255];
   const PAPER = [245, 245, 247, 255];
 
-  const inset = size * (100 / 1024);
-  const body = size * (824 / 1024);
-  const radius = size * (185.4 / 1024);
-  c.squircleRect(inset, inset, body, body, radius, 4, ACC);
+  const body = size * BODY;
+  const inset = (size - body) / 2;
+  c.squircleRect(inset, inset, body, body, body * RADIUS, N, ACC);
 
   // 箭头按本体（而不是整块画布）排版，并以本体中心为基准放大到本体的六成左右——
   // Dock 里邻居们的图形基本都占到这个比例，箭头再小就显得空。

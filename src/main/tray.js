@@ -47,7 +47,11 @@ function createPanel() {
   panel.loadFile(path.join(__dirname, '..', 'renderer', 'panel.html'));
   // 点到别处就收起来——菜单栏面板该有的行为。
   panel.on('blur', () => panel.hide());
-  panel.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  // skipTransformProcessType 不能省：不加的话 Electron 会为了套用「所有工作区可见」
+  // 把进程类型切成 UIElementApplication（也就是没有 Dock 图标的附件类应用），而且切完
+  // 不会切回来 —— 表现就是启动时 Dock 图标闪一下就没了，非得点一次菜单栏图标、
+  // 走到 dock.show() 才会回来。
+  panel.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
   return panel;
 }
 
