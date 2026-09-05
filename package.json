@@ -5,6 +5,8 @@
   "description": "macOS 上的 frp 客户端 —— 托管 frpc 进程，把配置变成表单，在菜单栏显示实时状态。",
   "main": "src/main/main.js",
   "private": true,
+  "license": "MIT",
+  "author": "golangboy",
   "scripts": {
     "start": "electron .",
     "icons": "node scripts/make-icons.js",

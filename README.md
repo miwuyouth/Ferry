@@ -1,16 +1,57 @@
-# Ferry
+<p align="center">
+  <img src="resources/icon.png" width="120" height="120" alt="Ferry">
+</p>
 
-macOS 上的 frp 客户端。托管 `frpc` 进程，把配置变成表单，在菜单栏显示实时状态。
+<h1 align="center">Ferry</h1>
+
+<p align="center">macOS 上的 frp 客户端 —— 托管 frpc 进程，把配置变成表单，在菜单栏显示实时状态。</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <img alt="Platform: macOS" src="https://img.shields.io/badge/platform-macOS-lightgrey.svg">
+  <a href="https://github.com/OWNER/ferry/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/OWNER/ferry?include_prereleases"></a>
+</p>
+
+<!-- 把上面两处 OWNER 换成实际的 GitHub 用户名/组织名。 -->
 
 界面最初实现自 Claude Design 画布 `FrpKit.dc.html`（项目改名 Ferry 之前的画布，
 文件名保留原样；其中的 Industry 蓝图设计系统，该画布仍留在仓库里作为历史记录），
-后按 macOS Human Interface Guidelines 重做了一版：
-系统字体（San Francisco / PingFang SC）、systemBlue 强调色、13px 基准控件字号、
-连续圆角、菜单栏面板用的是真原生 vibrancy（`popover` 材质），并跟随系统的浅色 / 深色外观。
+后按 macOS Human Interface Guidelines 重做了一版：系统字体（San Francisco /
+PingFang SC）、systemBlue 强调色、13px 基准控件字号、连续圆角、菜单栏面板用的是
+真原生 vibrancy（`popover` 材质），并跟随系统的浅色 / 深色外观。
 
-## 跑起来
+## 特性
+
+- **托管 frpc 子进程** —— 启动、停止、崩溃后指数退避自动重连，改配置走 admin 接口热重载
+- **表单化配置** —— 隧道的增删改查、开关都是表单操作，不用手改 `frpc.toml`
+- **菜单栏实时状态** —— 连接状态、每条隧道的运行态、日志都能在菜单栏面板里看到
+- **流量统计给真数据** —— 接的是 `frps` 面板的真实接口；没配面板就诚实显示 `—`，不编数字
+- **原生 macOS 观感** —— 系统字体、systemBlue、连续圆角、真原生 vibrancy，浅色/深色自动跟随系统
+- **配置可导入导出**，可以定位/手动指定 `frpc` 二进制路径
+
+## 截图
+
+（还没放——建议后续把主窗口和菜单栏面板各截一张图存进 `docs/`，再用
+`![主窗口](docs/main-window.png)` 之类的方式引用到这里。对第一次逛到这个仓库的人
+帮助最大，先占个位，不打没截图先放假图那种自欺欺人的样子。）
+
+## 安装
+
+### 下载现成的构建产物（推荐）
+
+去 [Releases](https://github.com/OWNER/ferry/releases/latest) 下载对应架构的 dmg：
+Apple Silicon（M 系列）用 `-arm64.dmg`，Intel 用不带 arch 后缀的那个。
+
+现在还没有 Apple Developer 签名，第一次打开会被 Gatekeeper 拦。右键点 app、选
+「打开」，弹窗里再点一次「打开」放行——只需要做一次。
+
+### 从源码跑
+
+需要 Node.js 18+ 和本机的 `frpc`（没有就 `brew install frp`）。
 
 ```bash
+git clone https://github.com/OWNER/ferry.git
+cd ferry
 npm install
 npm start
 ```
@@ -24,20 +65,14 @@ ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/ node node_modu
 
 没有把这个镜像写进 `.npmrc` —— 换二进制来源该由你自己决定，不该由脚手架替你定。
 
-需要本机有 `frpc`。没有就装一个：
-
-```bash
-brew install frp
-```
-
-Ferry 按这个顺序找它：设置里手动指定的路径 → 打包进 app 的 `resources/frpc` →
+Ferry 按这个顺序找 `frpc`：设置里手动指定的路径 → 打包进 app 的 `resources/frpc` →
 `/opt/homebrew/bin` → `/usr/local/bin` → `/opt/local/bin` → `/usr/bin`。
 都找不到会在设置页明说，并给出「选择 frpc…」。
 
-打包：`npm run dist`（electron-builder，为 x64 与 arm64 各出一份 dmg + zip，
-产物在 `dist/`，本地未签名时 Gatekeeper 会挡，右键「打开」放行一次即可）。
+## 打包与发布
 
-## 发布到 GitHub Release
+打包：`npm run dist`（electron-builder，为 x64 与 arm64 各出一份 dmg + zip，
+产物在 `dist/`）。
 
 `.github/workflows/release.yml` 会在推送 `v*.*.*` 形式的 tag 时，在 macOS
 runner 上跑 `npm run dist -- --publish always`，把四份产物（x64/arm64 各一份
@@ -93,7 +128,7 @@ Ferry 会重启 `frpc` 进程 —— 设置页的按钮上写明了是哪一种�
 admin 接口的端口每次启动重选一个空闲端口，口令随机生成且不落盘 —— 它只在
 `127.0.0.1` 上给 Ferry 自己用。
 
-## 代码结构
+## 项目结构
 
 ```
 src/
@@ -105,7 +140,7 @@ src/
 │   ├── logbuf.js        stdout -> 结构化日志行
 │   ├── metrics.js       采样层：frpc 状态 + frps 面板 + TCP 拨测
 │   └── tray.js          菜单栏图标与面板窗口
-├── preload/preload.js   contextBridge，渲染层唯一出口
+├── preload/preload.js   contextBridge，渲染层唯一出口（window.ferry.*）
 └── renderer/
     ├── index.html       主窗口（设计稿 01 号画板）
     ├── panel.html       菜单栏面板（设计稿 02 号画板）
@@ -117,9 +152,9 @@ src/
 渲染层开着 `contextIsolation`、关着 `nodeIntegration`，并有 CSP
 （`connect-src 'none'` —— 页面自己不发任何网络请求，全部走 IPC）。
 
-## 与设计稿的差异
+## 设计笔记：与原型画布的差异
 
-设计稿是原型，有几处接真实 frpc 后必须补：
+`FrpKit.dc.html` 是最初的原型，接上真实 frpc 之后有几处必须补：
 
 - **多了「流量统计来源」一节** —— 没有 frps 面板凭据就拿不到流量和连接数（见上）。
 - **多了「frpc 与版本」一节** —— 真实环境要能定位二进制、看版本。
@@ -142,3 +177,16 @@ src/
 字体全部是系统自带的 San Francisco / PingFang SC（`-apple-system`），不再走
 Google Fonts CDN，离线也不会有版式差异——CSP 里也因此不再需要 `fonts.googleapis.com`
 这类外部白名单。
+
+## 贡献
+
+欢迎提 issue 和 PR。目前是个人业余维护，没有测试套件，改动请至少：
+
+1. `npm start` 手动跑一遍改到的界面/流程；
+2. 涉及 `frpc.toml` 序列化的改动，跑一遍 `npm run dist` 确认打包不受影响；
+3. PR 里说清楚「为什么改」，尤其是涉及本 README「数据是真的从哪来的」那节列出的
+   任何数据来源——新加的字段/图表如果没有真实来源，请显示空状态而不是编数据。
+
+## License
+
+[MIT](LICENSE)
