@@ -1,7 +1,7 @@
 {
   "name": "ferry",
   "productName": "Ferry",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "macOS 上的 frp 客户端 —— 托管 frpc 进程，把配置变成表单，在菜单栏显示实时状态。",
   "main": "src/main/main.js",
   "private": true,
