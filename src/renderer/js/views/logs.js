@@ -2,7 +2,7 @@
 // 02 / 实时日志 —— frpc 的真实标准输出，按级别筛选，流式追加。
 //
 // 消息本体保持 frpc 原样（英文）：这是排障用的日志，改写它等于骗人。
-// 中文只出现在界面 chrome 和 FrpKit 自己写的那几行上。
+// 中文只出现在界面 chrome 和 Ferry 自己写的那几行上。
 
 (() => {
   const { $, el } = FK;
@@ -93,12 +93,12 @@
         if (autoScroll) { const h = $('#logScroll'); h.scrollTop = h.scrollHeight; }
       });
       $('#btnLogClear').addEventListener('click', async () => {
-        await window.frpkit.logs.clear();
+        await window.ferry.logs.clear();
         lines = [];
         rebuild();
       });
       // 清空后主进程的 id 仍在往上走，lastId 保持不变即可继续正确去重。
-      $('#btnLogExport').addEventListener('click', () => window.frpkit.logs.export());
+      $('#btnLogExport').addEventListener('click', () => window.ferry.logs.export());
 
       rebuild();
     },

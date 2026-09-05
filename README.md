@@ -1,9 +1,10 @@
-# FrpKit
+# Ferry
 
 macOS 上的 frp 客户端。托管 `frpc` 进程，把配置变成表单，在菜单栏显示实时状态。
 
-界面最初实现自 Claude Design 画布 `FrpKit.dc.html`（其中的 Industry 蓝图设计系统，
-该画布仍留在仓库里作为历史记录），后按 macOS Human Interface Guidelines 重做了一版：
+界面最初实现自 Claude Design 画布 `FrpKit.dc.html`（项目改名 Ferry 之前的画布，
+文件名保留原样；其中的 Industry 蓝图设计系统，该画布仍留在仓库里作为历史记录），
+后按 macOS Human Interface Guidelines 重做了一版：
 系统字体（San Francisco / PingFang SC）、systemBlue 强调色、13px 基准控件字号、
 连续圆角、菜单栏面板用的是真原生 vibrancy（`popover` 材质），并跟随系统的浅色 / 深色外观。
 
@@ -29,7 +30,7 @@ ELECTRON_MIRROR=https://registry.npmmirror.com/-/binary/electron/ node node_modu
 brew install frp
 ```
 
-FrpKit 按这个顺序找它：设置里手动指定的路径 → 打包进 app 的 `resources/frpc` →
+Ferry 按这个顺序找它：设置里手动指定的路径 → 打包进 app 的 `resources/frpc` →
 `/opt/homebrew/bin` → `/usr/local/bin` → `/opt/local/bin` → `/usr/bin`。
 都找不到会在设置页明说，并给出「选择 frpc…」。
 
@@ -68,29 +69,29 @@ git push origin v1.0.1
 所以设置里多了一节「流量统计来源」——填上 frps 面板地址和凭据才有真实数字；
 不填的话这些格子诚实地显示 `—`，不会编数据。
 
-24 小时曲线是 FrpKit 在本地按小时累计出来的：面板给的是「今日累计」，
-这边做差分存进 `store.json` 的 24 个小时桶。所以曲线只覆盖 FrpKit 运行过的时段。
+24 小时曲线是 Ferry 在本地按小时累计出来的：面板给的是「今日累计」，
+这边做差分存进 `store.json` 的 24 个小时桶。所以曲线只覆盖 Ferry 运行过的时段。
 
 日志里的消息保持 `frpc` 原样（英文）。这是排障用的日志，改写它等于骗人；
-中文只出现在界面 chrome 和 FrpKit 自己写的那几行上。
+中文只出现在界面 chrome 和 Ferry 自己写的那几行上。
 
 ## 启停一条隧道意味着什么
 
 frp 没有「运行时停用某条代理」的概念。开关拨到关，等于把这条 proxy
 从 `frpc.toml` 里拿掉，然后走 admin 接口 `GET /api/reload` 热重载。
 拨回开就再写回去。改服务器地址、token、传输协议这些不吃热重载，
-FrpKit 会重启 `frpc` 进程 —— 设置页的按钮上写明了是哪一种。
+Ferry 会重启 `frpc` 进程 —— 设置页的按钮上写明了是哪一种。
 
 ## 文件都在哪
 
-配置和状态：`~/Library/Application Support/FrpKit/`
+配置和状态：`~/Library/Application Support/Ferry/`
 
 - `frpc.toml` —— 生成的配置，权限 0600（里面有 token）
 - `store.json` —— 设置、隧道列表、流量小时桶
 - `frpc.log` —— 日志落盘，保留 7 天
 
 admin 接口的端口每次启动重选一个空闲端口，口令随机生成且不落盘 —— 它只在
-`127.0.0.1` 上给 FrpKit 自己用。
+`127.0.0.1` 上给 Ferry 自己用。
 
 ## 代码结构
 

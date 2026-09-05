@@ -82,7 +82,7 @@ function createTray({ onShow, onQuit }) {
   image.setTemplateImage(true); // 跟随浅色/深色菜单栏自动反色
 
   tray = new Tray(image);
-  tray.setToolTip('FrpKit');
+  tray.setToolTip('Ferry');
   tray.on('click', togglePanel);
   tray.on('right-click', () => { onShow(); });
 
@@ -93,7 +93,7 @@ function createTray({ onShow, onQuit }) {
       const rate = metrics ? fmtRate(metrics.rate.down) : '';
       tray.setTitle(rate ? ` ${rate}` : '');
       tray.setToolTip(
-        state.connected ? 'FrpKit — 已连接' : state.running ? 'FrpKit — 连接中' : 'FrpKit — 未运行'
+        state.connected ? 'Ferry — 已连接' : state.running ? 'Ferry — 连接中' : 'Ferry — 未运行'
       );
     },
     hidePanel() { if (panel && panel.isVisible()) panel.hide(); },

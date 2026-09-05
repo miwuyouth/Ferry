@@ -87,7 +87,7 @@
   };
 
   async function boot() {
-    const b = await window.frpkit.bootstrap();
+    const b = await window.ferry.bootstrap();
     state = b;
 
     FK.tunnels.init();
@@ -100,13 +100,13 @@
     for (const n of $$('[data-go]')) n.addEventListener('click', () => setView(n.dataset.go));
 
     $('#btnPower').addEventListener('click', async () => {
-      if (state.frpc.running) await window.frpkit.frpc.stop();
-      else await window.frpkit.frpc.start();
+      if (state.frpc.running) await window.ferry.frpc.stop();
+      else await window.ferry.frpc.start();
     });
     $('#btnOnboard').addEventListener('click', () => FK.onboarding.open(state.settings));
 
-    window.frpkit.onState((s) => { state = s; paint(); });
-    window.frpkit.onLogs((batch) => FK.logs.push(batch));
+    window.ferry.onState((s) => { state = s; paint(); });
+    window.ferry.onLogs((batch) => FK.logs.push(batch));
 
     // 侧栏选中态跟着窗口是否是前台走——聚焦时是实心 accent，
     // 失焦时退成中性灰，跟 Finder / Mail 的侧栏一个道理。

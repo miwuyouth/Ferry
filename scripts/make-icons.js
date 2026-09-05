@@ -175,7 +175,7 @@ console.log('wrote resources/trayTemplate.png, trayTemplate@2x.png, icon.png (10
 // iconutil 只在 macOS 上有，非 mac 平台就跳过，留着已有的 icon.png 兜底
 // （electron-builder 在拿到单张 1024 的 png 时也能自己转成 icns）。
 if (process.platform === 'darwin') {
-  const iconset = path.join(os.tmpdir(), 'FrpKit.iconset');
+  const iconset = path.join(os.tmpdir(), 'Ferry.iconset');
   fs.rmSync(iconset, { recursive: true, force: true });
   fs.mkdirSync(iconset);
   const sizes = [

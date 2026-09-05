@@ -1,6 +1,6 @@
 {
-  "name": "frpkit",
-  "productName": "FrpKit",
+  "name": "ferry",
+  "productName": "Ferry",
   "version": "1.0.0",
   "description": "macOS 上的 frp 客户端 —— 托管 frpc 进程，把配置变成表单，在菜单栏显示实时状态。",
   "main": "src/main/main.js",
@@ -11,7 +11,7 @@
     "dist": "electron-builder --mac"
   },
   "build": {
-    "appId": "dev.frpkit.app",
+    "appId": "dev.ferry.app",
     "files": [
       "src/**/*",
       "resources/**/*",

@@ -63,10 +63,10 @@
 
     if (!r.sw.dataset.wired) {
       r.sw.dataset.wired = '1';
-      r.sw.addEventListener('click', () => window.frpkit.tunnels.toggle(entry.id));
+      r.sw.addEventListener('click', () => window.ferry.tunnels.toggle(entry.id));
       r.del.addEventListener('click', async () => {
         if (!confirm(`删除隧道「${entry.name}」？`)) return;
-        await window.frpkit.tunnels.remove(entry.id);
+        await window.ferry.tunnels.remove(entry.id);
       });
     }
     entry.id = t.id;
@@ -192,7 +192,7 @@
     }
 
     hint($('#newHint'), '写入 frpc.toml 并热重载…');
-    const res = await window.frpkit.tunnels.add(draft);
+    const res = await window.ferry.tunnels.add(draft);
     if (res && res.ok === false) return hint($('#newHint'), res.message || '保存失败。', 'err');
     closeSheet();
   }
@@ -215,7 +215,7 @@
       $('#btnNewSave').addEventListener('click', saveTunnel);
       $('#btnStopAll').addEventListener('click', async () => {
         if (!confirm('停用全部隧道？会从 frpc.toml 中移除并热重载。')) return;
-        await window.frpkit.tunnels.stopAll();
+        await window.ferry.tunnels.stopAll();
       });
       for (const id of ['#nName', '#nLocalIP', '#nLocalPort', '#nRemotePort', '#nDomains']) {
         $(id).addEventListener('input', previewToml);

@@ -9,7 +9,7 @@
   const PROTOCOLS = ['tcp', 'kcp', 'quic', 'websocket'];
 
   const SWITCHES = [
-    ['launchAtLogin', '开机启动', '登录时以后台方式启动 FrpKit'],
+    ['launchAtLogin', '开机启动', '登录时以后台方式启动 Ferry'],
     ['autoConnect', '启动后自动连接', '打开应用即建立控制连接'],
     ['quitOnClose', '关闭窗口时退出', '关掉则仅隐藏窗口，保留菜单栏图标'],
     ['autoReconnect', '断线自动重连', '指数退避，最多重试 10 次'],
@@ -34,7 +34,7 @@
       sw.addEventListener('click', async () => {
         const next = !sw.classList.contains('on');
         sw.classList.toggle('on', next);
-        await window.frpkit.settings.patch({ [key]: next });
+        await window.ferry.settings.patch({ [key]: next });
       });
       swNodes.set(key, sw);
       row.append(box, sw);
@@ -90,9 +90,9 @@
     const patch = collect();
     if (!patch.serverAddr) return hint($('#saveHint'), '请先填写服务器地址。', 'err');
     hint($('#saveHint'), '保存中…');
-    const { needsRestart } = await window.frpkit.settings.patch(patch);
+    const { needsRestart } = await window.ferry.settings.patch(patch);
     // serverAddr / token / protocol 这类不吃热重载，得把进程重来一遍。
-    const res = needsRestart ? await window.frpkit.frpc.restart() : await window.frpkit.frpc.apply();
+    const res = needsRestart ? await window.ferry.frpc.restart() : await window.ferry.frpc.apply();
     if (res && res.ok === false) return hint($('#saveHint'), res.message || '应用失败。', 'err');
     hint($('#saveHint'), needsRestart ? '已保存，frpc 已重启。' : '已保存并热重载。', 'ok');
     setTimeout(() => hint($('#saveHint'), ''), 4000);
@@ -106,16 +106,16 @@
       $('#btnSave').addEventListener('click', save);
       $('#btnTest').addEventListener('click', async () => {
         hint($('#testHint'), '拨测中…');
-        const res = await window.frpkit.frpc.test({
+        const res = await window.ferry.frpc.test({
           serverAddr: $('#sServerAddr').value.trim(),
           serverPort: $('#sServerPort').value.trim()
         });
         hint($('#testHint'), res.message, res.ok ? 'ok' : 'err');
       });
-      $('#btnExport').addEventListener('click', () => window.frpkit.config.export());
-      $('#btnReveal').addEventListener('click', () => window.frpkit.config.reveal());
+      $('#btnExport').addEventListener('click', () => window.ferry.config.export());
+      $('#btnReveal').addEventListener('click', () => window.ferry.config.reveal());
       $('#btnImport').addEventListener('click', async () => {
-        const res = await window.frpkit.config.import();
+        const res = await window.ferry.config.import();
         if (res.ok) {
           filled = false; // 让下一次 update 用导入后的值重灌表单
           hint($('#saveHint'), `已导入 ${res.count} 条隧道，frpc 已重启。`, 'ok');
@@ -124,7 +124,7 @@
         }
       });
       $('#btnLocate').addEventListener('click', async () => {
-        const res = await window.frpkit.frpc.locate();
+        const res = await window.ferry.frpc.locate();
         if (res.ok) {
           $('#aboutPath').textContent = res.path;
           hint($('#saveHint'), `已选择 ${res.version || res.path}`, 'ok');
@@ -134,7 +134,7 @@
 
     // 版本和路径是启动时读一次的静态信息。
     setAbout({ appVersion, frpcVersion, frpcPath }) {
-      $('#aboutVersions').textContent = `FrpKit ${appVersion} · ${frpcVersion || 'frpc 未找到'}`;
+      $('#aboutVersions').textContent = `Ferry ${appVersion} · ${frpcVersion || 'frpc 未找到'}`;
       $('#aboutPath').textContent = frpcPath || '未找到 frpc —— 可用 brew install frp 安装，或在右侧手动选择。';
       $('#aboutPath').title = frpcPath || '';
     },

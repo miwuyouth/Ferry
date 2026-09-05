@@ -6,13 +6,13 @@
   const { $, el, hint } = FK;
 
   const COPY = {
-    1: ['欢迎使用 FrpKit', 'FrpKit 是 macOS 上的 frp 客户端。它托管 frpc 进程，把配置变成表单，并在菜单栏显示实时状态。三步即可开始。'],
+    1: ['欢迎使用 Ferry', 'Ferry 是 macOS 上的 frp 客户端。它托管 frpc 进程，把配置变成表单，并在菜单栏显示实时状态。三步即可开始。'],
     2: ['连接你的 frps', '填写服务器地址与 token。参数会写入 frpc.toml，之后可在设置中随时修改。'],
     3: ['准备就绪', '控制连接已建立。现在可以新建隧道，把本机端口暴露到公网。']
   };
 
   const STEPS = [
-    ['1', '欢迎', 'FrpKit 能做什么'],
+    ['1', '欢迎', 'Ferry 能做什么'],
     ['2', '连接服务器', '地址、端口与 token'],
     ['3', '完成', '新建第一条隧道']
   ];
@@ -49,12 +49,12 @@
       const serverAddr = $('#obAddr').value.trim();
       if (!serverAddr) return hint($('#obHint'), '请填写服务器地址。', 'err');
       hint($('#obHint'), '保存并连接…');
-      await window.frpkit.settings.patch({
+      await window.ferry.settings.patch({
         serverAddr,
         serverPort: Number($('#obPort').value.trim()) || 7000,
         token: $('#obToken').value
       });
-      const res = await window.frpkit.frpc.restart();
+      const res = await window.ferry.frpc.restart();
       if (res && res.ok === false) return hint($('#obHint'), res.message || '启动失败。', 'err');
       hint($('#obHint'), '');
       step = 3;
@@ -67,7 +67,7 @@
   }
 
   async function finish() {
-    await window.frpkit.onboardDone();
+    await window.ferry.onboardDone();
     $('#onboard').classList.remove('is-open');
     FK.settings.refill(FK.app.state.settings);
   }
@@ -79,14 +79,14 @@
       $('#obSkip').addEventListener('click', finish);
       $('#obTest').addEventListener('click', async () => {
         hint($('#obHint'), '拨测中…');
-        const res = await window.frpkit.frpc.test({
+        const res = await window.ferry.frpc.test({
           serverAddr: $('#obAddr').value.trim(),
           serverPort: $('#obPort').value.trim()
         });
         hint($('#obHint'), res.message, res.ok ? 'ok' : 'err');
       });
       $('#obImport').addEventListener('click', async () => {
-        const res = await window.frpkit.config.import();
+        const res = await window.ferry.config.import();
         if (res.ok) finish();
       });
     },

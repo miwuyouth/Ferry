@@ -80,7 +80,7 @@ class LogBuffer {
     }
 
     const [, date, time, code, caller, rest] = m;
-    // FrpKit 每 2 秒轮询一次 /api/status，这些回声会淹没日志窗口——但只丢轮询
+    // Ferry 每 2 秒轮询一次 /api/status，这些回声会淹没日志窗口——但只丢轮询
     // 那两个接口，admin 接口的其它输出（success reload conf）是有用的，留着。
     if (caller.startsWith('client/admin_api.go') && /\/api\/(status|config)/.test(rest)) return null;
 
@@ -123,7 +123,7 @@ class LogBuffer {
     }, 120);
   }
 
-  // FrpKit 自己的事件（进程启动、退出、重连）也进同一条流。
+  // Ferry 自己的事件（进程启动、退出、重连）也进同一条流。
   note(lvl, msg) {
     const line = { id: ++this.seq, ...localStamp(), lvl, proxy: '', msg };
     this.lines.push(line);

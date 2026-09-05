@@ -1,6 +1,6 @@
 'use strict';
 // 持久化：设置、隧道列表、流量小时桶。
-// 全部落在 ~/Library/Application Support/FrpKit/store.json，
+// 全部落在 ~/Library/Application Support/Ferry/store.json，
 // 生成的 frpc.toml 就在它旁边（界面底栏显示的就是这个路径）。
 
 const fs = require('fs');
@@ -34,7 +34,7 @@ const DEFAULTS = {
 
 class Store {
   constructor() {
-    // userData 默认就是 ~/Library/Application Support/FrpKit（productName 决定），
+    // userData 默认就是 ~/Library/Application Support/Ferry（productName 决定），
     // 走 getPath 而不是自己拼，是为了 --user-data-dir 能覆盖它——冒烟测试要用。
     this.dir = app.getPath('userData');
     this.file = path.join(this.dir, 'store.json');
@@ -45,7 +45,7 @@ class Store {
     // admin 接口的口令每次启动重新生成，不落盘——它只在本机回环上用一次。
     this.admin = {
       port: 0,
-      user: 'frpkit',
+      user: 'ferry',
       password: crypto.randomBytes(18).toString('base64url')
     };
   }

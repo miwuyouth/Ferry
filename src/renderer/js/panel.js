@@ -28,7 +28,7 @@
       let e = cache.get(t.id);
       if (!e) {
         e = buildRow();
-        e.sw.addEventListener('click', () => window.frpkit.tunnels.toggle(e.id));
+        e.sw.addEventListener('click', () => window.ferry.tunnels.toggle(e.id));
         cache.set(t.id, e);
       }
       e.id = t.id;
@@ -77,27 +77,27 @@
     const h = Math.ceil(document.querySelector('.panel').scrollHeight);
     if (!h || Math.abs(h - lastH) < 4) return;
     lastH = h;
-    window.frpkit.win.panelHeight(h);
+    window.ferry.win.panelHeight(h);
   }
 
   async function boot() {
-    const state = await window.frpkit.bootstrap();
+    const state = await window.ferry.bootstrap();
     paint(state);
-    window.frpkit.onState(paint);
+    window.ferry.onState(paint);
 
     $('#pOpen').addEventListener('click', async () => {
-      await window.frpkit.win.show();
-      window.frpkit.win.hidePanel();
+      await window.ferry.win.show();
+      window.ferry.win.hidePanel();
     });
     $('#pPause').addEventListener('click', async () => {
       const s = FK.last;
-      if (s && s.frpc.running) await window.frpkit.frpc.stop();
-      else await window.frpkit.frpc.start();
+      if (s && s.frpc.running) await window.ferry.frpc.stop();
+      else await window.ferry.frpc.start();
     });
-    $('#pQuit').addEventListener('click', () => window.frpkit.win.quit());
+    $('#pQuit').addEventListener('click', () => window.ferry.win.quit());
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') window.frpkit.win.hidePanel();
+      if (e.key === 'Escape') window.ferry.win.hidePanel();
     });
   }
 

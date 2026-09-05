@@ -72,7 +72,7 @@
     }
 
     $('#chartNote').textContent = state.metrics.dashOk
-      ? '浅色为上行，深色为下行 · 每小时增量，FrpKit 运行期间采样'
+      ? '浅色为上行，深色为下行 · 每小时增量，Ferry 运行期间采样'
       : '未配置 frps 面板，暂无流量数据（设置 › 流量统计来源）';
   }
 

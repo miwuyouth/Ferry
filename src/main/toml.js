@@ -3,7 +3,7 @@
 //
 // 只覆盖 frp 客户端配置实际用到的 TOML 子集：点号键（auth.token）、
 // 顶层键值、[[proxies]] 数组表、字符串/整数/布尔/字符串数组。
-// 写出的文件用 `frpc verify` 校验过，导入时能读回 FrpKit 自己写的文件，
+// 写出的文件用 `frpc verify` 校验过，导入时能读回 Ferry 自己写的文件，
 // 也能读懂手写的常见 frpc.toml。
 
 const TYPES = ['tcp', 'udp', 'http', 'https'];
@@ -18,7 +18,7 @@ function q(s) {
 // 概念，停用等于把它从配置里拿掉再热重载。
 function stringify(settings, tunnels, admin) {
   const L = [];
-  L.push('# 由 FrpKit 生成 —— 手动修改会在下次保存时被覆盖。');
+  L.push('# 由 Ferry 生成 —— 手动修改会在下次保存时被覆盖。');
   L.push('# frp 配置参考 https://gofrp.org/docs/reference/client-configures/');
   L.push('');
   L.push(`serverAddr = ${q(settings.serverAddr || '')}`);
@@ -33,7 +33,7 @@ function stringify(settings, tunnels, admin) {
   L.push('log.to = "console"');
   L.push(`log.level = ${q(settings.logLevel || 'info')}`);
   L.push('');
-  L.push('# FrpKit 通过这个本地 admin 接口读取代理状态并热重载配置。');
+  L.push('# Ferry 通过这个本地 admin 接口读取代理状态并热重载配置。');
   L.push('webServer.addr = "127.0.0.1"');
   L.push(`webServer.port = ${admin.port}`);
   L.push(`webServer.user = ${q(admin.user)}`);
@@ -101,7 +101,7 @@ function parse(text) {
       continue;
     }
     if (line[0] === '[') {
-      // 其它表（[[visitors]]、[metadatas] …）FrpKit 不管，跳过其内容。
+      // 其它表（[[visitors]]、[metadatas] …）Ferry 不管，跳过其内容。
       target = {};
       continue;
     }

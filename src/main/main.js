@@ -283,8 +283,8 @@ app.whenReady().then(async () => {
   frpc = new Frpc(store, logs);
   metrics = new Metrics(store, frpc);
 
-  frpc.on('crash', () => notify('FrpKit', 'frpc 进程意外退出，正在尝试重连。'));
-  frpc.on('gaveup', () => notify('FrpKit', '自动重连已达上限，连接未恢复。'));
+  frpc.on('crash', () => notify('Ferry', 'frpc 进程意外退出，正在尝试重连。'));
+  frpc.on('gaveup', () => notify('Ferry', '自动重连已达上限，连接未恢复。'));
   frpc.on('state', (s) => { if (tray) tray.update(s, metrics); });
 
   registerIpc();
