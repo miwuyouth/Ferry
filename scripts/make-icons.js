@@ -64,18 +64,19 @@ function canvas(w, h) {
   };
   // macOS 图标是「连续圆角」的方形（squircle），不是直角方块。
   // n 越大边越平直、拐角越急，4 接近系统图标的观感。
-  const squircleFill = (radius, n, c) => {
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const cx = Math.min(Math.max(x, radius), w - radius);
-        const cy = Math.min(Math.max(y, radius), h - radius);
-        const dx = Math.abs(x - cx), dy = Math.abs(y - cy);
+  const squircleRect = (x0, y0, rw, rh, radius, n, c) => {
+    for (let y = Math.floor(y0); y < Math.ceil(y0 + rh); y++) {
+      for (let x = Math.floor(x0); x < Math.ceil(x0 + rw); x++) {
+        const lx = x - x0, ly = y - y0; // 本体内的局部坐标
+        const cx = Math.min(Math.max(lx, radius), rw - radius);
+        const cy = Math.min(Math.max(ly, radius), rh - radius);
+        const dx = Math.abs(lx - cx), dy = Math.abs(ly - cy);
         if (dx === 0 && dy === 0) { set(x, y, c[0], c[1], c[2], c[3] ?? 255); continue; }
         if (Math.pow(dx / radius, n) + Math.pow(dy / radius, n) <= 1) set(x, y, c[0], c[1], c[2], c[3] ?? 255);
       }
     }
   };
-  return { px, set, rect, squircleFill, w, h };
+  return { px, set, rect, squircleRect, w, h };
 }
 
 // 按 factor x factor 分块，用预乘 alpha 平均降采样 —— 让不透明色块之间、
@@ -141,20 +142,34 @@ function trayIcon(scale) {
 
 // 应用图标：systemBlue 底 + 连续圆角（squircle）+ 白色双向箭头——
 // 跟托盘图标、导航栏图标同一个语汇（隧道两端都在收发），扁平无边框。
+//
+// 关键是「本体不铺满画布」：Big Sur 之后的 macOS 图标模板，1024 的画布里本体只占
+// 824，四边各留 100 的空白，圆角半径 185.4。少了这圈空白，图标在 Dock 里会比左右
+// 邻居大一圈、显得发胀 —— 系统图标全都是按这个格子画的。
 function drawAppIcon(c, size) {
   const ACC = [0, 122, 255, 255];
   const PAPER = [245, 245, 247, 255];
-  const u = size / 64;
 
-  c.squircleFill(size * 0.222, 4, ACC);
+  const inset = size * (100 / 1024);
+  const body = size * (824 / 1024);
+  const radius = size * (185.4 / 1024);
+  c.squircleRect(inset, inset, body, body, radius, 4, ACC);
+
+  // 箭头按本体（而不是整块画布）排版，并以本体中心为基准放大到本体的六成左右——
+  // Dock 里邻居们的图形基本都占到这个比例，箭头再小就显得空。
+  const GLYPH = 1.32;
+  const u = (body / 64) * GLYPH;
+  const mid = inset + body / 2;
   const bar = Math.max(2, 2.6 * u);
-  c.rect(18 * u, 26 * u, 26 * u, bar, PAPER);
-  c.rect(20 * u, 36 * u, 26 * u, bar, PAPER);
+  const X = (n) => mid + (n - 32) * u;
+  const Y = (n) => mid + (n - 32) * u;
+  c.rect(X(18), Y(26), 26 * u, bar, PAPER);
+  c.rect(X(20), Y(36), 26 * u, bar, PAPER);
   for (let i = 0; i < 8 * u; i++) {
-    c.rect(44 * u - i, 26 * u - i, bar, bar, PAPER);
-    c.rect(44 * u - i, 26 * u + i, bar, bar, PAPER);
-    c.rect(20 * u + i, 36 * u - i, bar, bar, PAPER);
-    c.rect(20 * u + i, 36 * u + i, bar, bar, PAPER);
+    c.rect(X(44) - i, Y(26) - i, bar, bar, PAPER);
+    c.rect(X(44) - i, Y(26) + i, bar, bar, PAPER);
+    c.rect(X(20) + i, Y(36) - i, bar, bar, PAPER);
+    c.rect(X(20) + i, Y(36) + i, bar, bar, PAPER);
   }
 }
 
