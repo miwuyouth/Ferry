@@ -1,7 +1,7 @@
 {
   "name": "ferry",
   "productName": "Ferry",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "跨平台 frp 客户端 —— 托管 frpc 进程，把配置变成表单，在菜单栏/托盘显示实时状态。",
   "main": "src/main/main.js",
   "private": true,
