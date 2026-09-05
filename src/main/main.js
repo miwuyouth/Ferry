@@ -278,6 +278,13 @@ if (!app.requestSingleInstanceLock()) {
 app.whenReady().then(async () => {
   nativeTheme.themeSource = 'system'; // 跟随系统的浅色 / 深色外观
 
+  // 打包后的 app 从 Info.plist 里的 icon.icns 拿图标，这行不需要也不影响。
+  // 但 `npm start` 直接跑裸的 electron 二进制时，Dock 默认显示电子的原子 logo——
+  // 必须手动设一次才会换成我们自己的图标。
+  if (!app.isPackaged) {
+    app.dock?.setIcon(path.join(__dirname, '..', '..', 'resources', 'icon.png'));
+  }
+
   store = new Store();
   logs = new LogBuffer(store.logPath, (batch) => broadcast('push:logs', batch));
   frpc = new Frpc(store, logs);
