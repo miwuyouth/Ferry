@@ -23,15 +23,21 @@ let quitting = false;
 // —— 窗口 ——————————————————————————————————————————————
 
 function createMainWindow() {
+  const isMac = process.platform === 'darwin';
   mainWindow = new BrowserWindow({
     width: 1180,
     height: 760,
     minWidth: 940,
     minHeight: 600,
     show: false,
-    // 系统交通灯放进我们的头部条，标题栏其余部分由 CSS 负责拖动。
-    titleBarStyle: 'hiddenInset',
-    trafficLightPosition: { x: 16, y: 16 },
+    ...(isMac
+      ? {
+          titleBarStyle: 'hiddenInset',
+          trafficLightPosition: { x: 16, y: 16 }
+        }
+      : {
+          autoHideMenuBar: true
+        }),
     // 跟随系统外观选初始底色，避免加载完成前的一瞬间闪错主题。
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#1c1c1e' : '#f2f2f3',
     webPreferences: {
@@ -273,10 +279,12 @@ function registerIpc() {
   ipcMain.handle('config:reveal', () => { shell.showItemInFolder(store.configPath); });
 
   ipcMain.handle('frpc:locate', async () => {
+    const isWin = process.platform === 'win32';
     const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
       title: t('dlg.chooseFrpc'),
       properties: ['openFile'],
-      defaultPath: '/usr/local/bin'
+      defaultPath: isWin ? 'C:\\' : (process.platform === 'linux' ? '/usr/bin' : '/usr/local/bin'),
+      filters: isWin ? [{ name: 'Executable (*.exe)', extensions: ['exe'] }] : undefined
     });
     if (canceled || !filePaths.length) return { ok: false };
     store.patchSettings({ frpcPath: filePaths[0] });

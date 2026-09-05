@@ -1,8 +1,8 @@
 {
   "name": "ferry",
   "productName": "Ferry",
-  "version": "1.0.1",
-  "description": "macOS 上的 frp 客户端 —— 托管 frpc 进程，把配置变成表单，在菜单栏显示实时状态。",
+  "version": "1.0.2",
+  "description": "跨平台 frp 客户端 —— 托管 frpc 进程，把配置变成表单，在菜单栏/托盘显示实时状态。",
   "main": "src/main/main.js",
   "private": true,
   "license": "MIT",
@@ -11,7 +11,11 @@
     "start": "node scripts/patch-electron-plist.js && electron .",
     "postinstall": "node scripts/patch-electron-plist.js",
     "icons": "node scripts/make-icons.js",
-    "dist": "electron-builder --mac"
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:linux": "electron-builder --linux",
+    "dist:all": "electron-builder -mwl"
   },
   "build": {
     "appId": "dev.ferry.app",
@@ -47,6 +51,54 @@
       ],
       "hardenedRuntime": false,
       "gatekeeperAssess": false
+    },
+    "win": {
+      "icon": "resources/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Ferry"
+    },
+    "linux": {
+      "icon": "resources/icon.png",
+      "category": "Development",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "tar.gz",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     }
   },
   "devDependencies": {

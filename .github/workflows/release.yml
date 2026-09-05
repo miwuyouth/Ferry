@@ -1,7 +1,5 @@
 name: Release
 
-# 推一个 v 开头的 tag（如 v1.0.0）就会触发：在 macOS runner 上打包
-# dmg + zip（x64 与 arm64 各一份），然后自动传到本仓库的 GitHub Release。
 on:
   push:
     tags:
@@ -12,33 +10,87 @@ permissions:
   contents: write
 
 jobs:
-  release:
-    runs-on: macos-latest
+  build:
+    name: Build (${{ matrix.platform.name }})
+    runs-on: ${{ matrix.platform.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - name: macOS
+            os: macos-latest
+            target: --mac
+          - name: Windows
+            os: windows-latest
+            target: --win
+          - name: Linux
+            os: ubuntu-latest
+            target: --linux
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-      - run: npm run icons
+      - name: Generate icons
+        run: npm run icons
 
-      - name: Build and publish
+      - name: Build package
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run dist -- --publish always
+        run: npx electron-builder ${{ matrix.platform.target }}
 
-      - name: Publish release and generate changelog
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ferry-${{ matrix.platform.name }}
+          path: |
+            dist/*.dmg
+            dist/*.pkg
+            dist/*.zip
+            dist/*.exe
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.tar.gz
+          if-no-files-found: ignore
+
+  release:
+    name: Publish Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: ferry-*
+          path: release-assets
+          merge-multiple: true
+
+      - name: Generate changelog and release notes
         run: |
           TAG_NAME="${{ github.ref_name }}"
+          if [ -z "$TAG_NAME" ] || [ "$TAG_NAME" = "main" ]; then
+            TAG_NAME=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.2")
+          fi
+
           PREV_TAG=$(git describe --tags --abbrev=0 "${TAG_NAME}^" 2>/dev/null || true)
           TAG_MSG=$(git tag -l --format='%(contents)' "$TAG_NAME" | sed '/^-----BEGIN PGP/q' | sed -e :a -e '/^\n*$/{$d;N;};/\n$/ba')
 
@@ -62,4 +114,26 @@ jobs:
             fi
           } > /tmp/release-notes.md
 
-          gh release edit "$TAG_NAME" --draft=false --latest --notes-file /tmp/release-notes.md || true
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG_NAME="${{ github.ref_name }}"
+          if [ -z "$TAG_NAME" ] || [ "$TAG_NAME" = "main" ]; then
+            TAG_NAME=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.2")
+          fi
+
+          echo "Assets to publish:"
+          ls -lh release-assets/
+
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists. Uploading assets and updating notes..."
+            gh release upload "$TAG_NAME" release-assets/* --clobber
+            gh release edit "$TAG_NAME" --draft=false --latest --notes-file /tmp/release-notes.md
+          else
+            echo "Creating release $TAG_NAME..."
+            gh release create "$TAG_NAME" release-assets/* \
+              --title "$TAG_NAME" \
+              --notes-file /tmp/release-notes.md \
+              --latest
+          fi

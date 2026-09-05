@@ -7,6 +7,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 const invoke = (channel, payload) => ipcRenderer.invoke(channel, payload);
 
 contextBridge.exposeInMainWorld('ferry', {
+  platform: process.platform,
   bootstrap: () => invoke('app:bootstrap'),
 
   onState: (cb) => {

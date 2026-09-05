@@ -32,12 +32,14 @@ function createPanel() {
     alwaysOnTop: true,
     fullscreenable: false,
     transparent: true,
-    backgroundColor: '#00000000',
+    backgroundColor: process.platform === 'darwin' ? '#00000000' : '#1c1c1e',
     hasShadow: true,
-    // 真·原生毛玻璃——跟菜单栏其它下拉面板用的是同一种材质，
-    // 页面自己只需要给个半透明底色叠在它上面（见 app.css 面板一节）。
-    vibrancy: 'popover',
-    visualEffectState: 'active',
+    ...(process.platform === 'darwin'
+      ? {
+          vibrancy: 'popover',
+          visualEffectState: 'active'
+        }
+      : {}),
     webPreferences: {
       preload: path.join(__dirname, '..', 'preload', 'preload.js'),
       contextIsolation: true,
@@ -52,7 +54,11 @@ function createPanel() {
   // 把进程类型切成 UIElementApplication（也就是没有 Dock 图标的附件类应用），而且切完
   // 不会切回来 —— 表现就是启动时 Dock 图标闪一下就没了，非得点一次菜单栏图标、
   // 走到 dock.show() 才会回来。
-  panel.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
+  if (process.platform === 'darwin') {
+    panel.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType: true });
+  } else {
+    panel.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  }
   return panel;
 }
 
@@ -60,13 +66,19 @@ function positionPanel() {
   const b = tray.getBounds();
   const display = screen.getDisplayNearestPoint({ x: b.x, y: b.y });
   const area = display.workArea;
-  // 对齐图标中线，再夹回屏幕内，避免贴着右边缘时露出去。
+  // 对齐图标中线，再夹回屏幕内，避免贴着边缘时露出去。
   let x = Math.round(b.x + b.width / 2 - PANEL_W / 2);
   x = Math.max(area.x + 8, Math.min(x, area.x + area.width - PANEL_W - 8));
-  const y = Math.round(b.y + b.height + 6);
-  // 别顶到屏幕底边
-  const h = Math.min(panelH, area.y + area.height - y - 8);
-  panel.setBounds({ x, y, width: PANEL_W, height: Math.max(PANEL_MIN, h) });
+
+  let y;
+  // 如果托盘位于工作区下方（如 Windows 任务栏在底部），面板向上弹出
+  if (b.y > area.y + area.height / 2) {
+    y = Math.round(b.y - panelH - 6);
+  } else {
+    y = Math.round(b.y + b.height + 6);
+  }
+  y = Math.max(area.y + 8, Math.min(y, area.y + area.height - panelH - 8));
+  panel.setBounds({ x, y, width: PANEL_W, height: Math.max(PANEL_MIN, panelH) });
 }
 
 // 面板可能已经被销毁（比如一次被拦下来的退出会先关掉它），这时候要重建，
@@ -85,13 +97,18 @@ function togglePanel() {
 }
 
 function createTray({ onShow, onQuit }) {
-  const iconPath = path.join(__dirname, '..', '..', 'resources', 'trayTemplate.png');
+  const isMac = process.platform === 'darwin';
+  const iconPath = isMac
+    ? path.join(__dirname, '..', '..', 'resources', 'trayTemplate.png')
+    : path.join(__dirname, '..', '..', 'resources', 'icon.png');
   let image = nativeImage.createFromPath(iconPath);
   if (image.isEmpty()) {
     // 图标文件缺失也不该让应用起不来——退回一个空图，靠标题文字露出来。
     image = nativeImage.createEmpty();
   }
-  image.setTemplateImage(true); // 跟随浅色/深色菜单栏自动反色
+  if (isMac) {
+    image.setTemplateImage(true); // 跟随浅色/深色菜单栏自动反色
+  }
 
   tray = new Tray(image);
   tray.setToolTip('Ferry');

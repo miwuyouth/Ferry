@@ -34,6 +34,7 @@ body {
   background: var(--bg-canvas);
   -webkit-app-region: drag;
 }
+body.not-darwin .chrome { padding-left: 16px; }
 .chrome button, .chrome .tag, .chrome input { -webkit-app-region: no-drag; }
 .chrome-title { font-size: 14px; font-weight: 600; letter-spacing: -0.012em; }
 .chrome-sub { font-size: 12px; color: var(--label-2); }

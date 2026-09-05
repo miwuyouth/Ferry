@@ -4,6 +4,10 @@
 (() => {
   const { $, $$, rate, duration, t } = FK;
 
+  if (window.ferry && window.ferry.platform && window.ferry.platform !== 'darwin') {
+    document.body.classList.add('not-darwin');
+  }
+
   const SUBS = {
     list: (s) => t('sub.list', { n: s.tunnels.length, on: s.tunnels.filter((x) => x.kind === 'on').length }),
     log: () => t('sub.log'),

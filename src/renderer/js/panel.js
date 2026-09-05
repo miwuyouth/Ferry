@@ -3,6 +3,10 @@
 
 (() => {
   const { $, el, rate, t } = FK;
+
+  if (window.ferry && window.ferry.platform && window.ferry.platform !== 'darwin') {
+    document.body.classList.add('not-darwin');
+  }
   const MAX_ROWS = 6;
   const cache = new Map();
 

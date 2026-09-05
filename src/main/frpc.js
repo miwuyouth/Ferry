@@ -10,12 +10,21 @@ const path = require('path');
 const toml = require('./toml');
 const { t } = require('../shared/i18n');
 
-const CANDIDATES = [
-  '/opt/homebrew/bin/frpc',
-  '/usr/local/bin/frpc',
-  '/opt/local/bin/frpc',
-  '/usr/bin/frpc'
-];
+const isWin = process.platform === 'win32';
+const CANDIDATES = isWin
+  ? [
+      'C:\\frpc\\frpc.exe',
+      'C:\\Program Files\\frp\\frpc.exe',
+      'C:\\Program Files (x86)\\frp\\frpc.exe'
+    ]
+  : [
+      '/opt/homebrew/bin/frpc',
+      '/usr/local/bin/frpc',
+      '/opt/local/bin/frpc',
+      '/usr/bin/frpc',
+      '/usr/local/frpc',
+      '/usr/bin/frp/frpc'
+    ];
 
 const BACKOFF = [1000, 2000, 4000, 8000, 15000, 30000, 30000, 60000, 60000, 60000];
 const MAX_RETRIES = 10;
@@ -65,7 +74,8 @@ class Frpc extends EventEmitter {
     const override = this.store.settings.frpcPath;
     if (override && fs.existsSync(override)) return override;
     // 打包后可以把 frpc 放进 app 的 resources/ 里一起分发。
-    const bundled = path.join(process.resourcesPath || '', 'frpc');
+    const binName = process.platform === 'win32' ? 'frpc.exe' : 'frpc';
+    const bundled = path.join(process.resourcesPath || '', binName);
     if (fs.existsSync(bundled)) return bundled;
     for (const p of CANDIDATES) if (fs.existsSync(p)) return p;
     return null;

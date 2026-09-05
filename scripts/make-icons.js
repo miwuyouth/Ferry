@@ -190,6 +190,36 @@ fs.writeFileSync(path.join(OUT, 'trayTemplate@2x.png'), trayIcon(2));
 fs.writeFileSync(path.join(OUT, 'icon.png'), appIcon(1024));
 console.log('wrote resources/trayTemplate.png, trayTemplate@2x.png, icon.png (1024)');
 
+// Windows .ico：生成包含 16, 32, 48, 64, 128, 256 多尺寸的标准 ICO
+function makeIco(sizes) {
+  const images = sizes.map((size) => ({ size, buf: appIcon(size) }));
+  const count = images.length;
+  let offset = 6 + count * 16;
+  const header = Buffer.alloc(6);
+  header.writeUInt16LE(0, 0);
+  header.writeUInt16LE(1, 2);
+  header.writeUInt16LE(count, 4);
+
+  const dirEntries = [];
+  for (const img of images) {
+    const entry = Buffer.alloc(16);
+    entry.writeUInt8(img.size >= 256 ? 0 : img.size, 0);
+    entry.writeUInt8(img.size >= 256 ? 0 : img.size, 1);
+    entry.writeUInt8(0, 2);
+    entry.writeUInt8(0, 3);
+    entry.writeUInt16LE(1, 4);
+    entry.writeUInt16LE(32, 6);
+    entry.writeUInt32LE(img.buf.length, 8);
+    entry.writeUInt32LE(offset, 12);
+    dirEntries.push(entry);
+    offset += img.buf.length;
+  }
+  return Buffer.concat([header, ...dirEntries, ...images.map((img) => img.buf)]);
+}
+
+fs.writeFileSync(path.join(OUT, 'icon.ico'), makeIco([256, 128, 64, 48, 32, 16]));
+console.log('wrote resources/icon.ico');
+
 // macOS .icns：electron-builder 打包 dmg/app 时用得上。
 // iconutil 只在 macOS 上有，非 mac 平台就跳过，留着已有的 icon.png 兜底
 // （electron-builder 在拿到单张 1024 的 png 时也能自己转成 icns）。
@@ -212,3 +242,4 @@ if (process.platform === 'darwin') {
   fs.rmSync(iconset, { recursive: true, force: true });
   console.log('wrote resources/icon.icns');
 }
+
