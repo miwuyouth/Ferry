@@ -17,6 +17,8 @@ const DEFAULTS = {
     proxyUrl: '',
     logLevel: 'info',
     frpcPath: '',
+    // 'system' 时按系统 locale 落到中文或英文，见 shared/i18n.js。
+    language: 'system',
     // frpc 自己不统计流量和连接数——那是 frps 面板的数据。
     // 填了这里才有「连接数 / 今日流量 / 24 小时曲线」，否则界面显示 —。
     dashboard: { enabled: false, addr: '', port: 7500, user: 'admin', password: '' },

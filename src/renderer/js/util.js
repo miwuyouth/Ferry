@@ -3,6 +3,18 @@
 
 const FK = (window.FK = {});
 
+// 文案表由 ../shared/i18n.js 提供（主进程 require 的是同一个文件）。
+FK.i18n = window.FerryI18n;
+FK.t = FK.i18n.t;
+
+// 语言变了才需要重刷静态文案和各视图里由 JS 生成的标签。
+FK.setLang = (lang) => {
+  if (lang === FK.i18n.getLang()) return false;
+  FK.i18n.setLang(lang);
+  FK.i18n.applyStatic(document);
+  return true;
+};
+
 FK.$ = (sel, root = document) => root.querySelector(sel);
 FK.$$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
 
@@ -44,7 +56,7 @@ FK.route = (t, serverAddr) => {
     return `${local} → ${serverAddr || 'frps'}:${t.remotePort || '?'}`;
   }
   const d = (t.customDomains || [])[0];
-  return `${local} → ${d || '（未设域名）'}`;
+  return `${local} → ${d || FK.t('route.noDomain')}`;
 };
 
 FK.short = (t) => `:${t.localPort}`;

@@ -6,7 +6,7 @@
   "main": "src/main/main.js",
   "private": true,
   "license": "MIT",
-  "author": "golangboy",
+  "author": "miwuyouth <miwuyouth@gmail.com>",
   "scripts": {
     "start": "electron .",
     "icons": "node scripts/make-icons.js",

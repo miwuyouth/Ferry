@@ -2,7 +2,7 @@
 // 菜单栏下拉面板：状态、两条速率、前几条隧道的快捷开关。
 
 (() => {
-  const { $, el, rate } = FK;
+  const { $, el, rate, t } = FK;
   const MAX_ROWS = 6;
   const cache = new Map();
 
@@ -50,7 +50,7 @@
     let empty = $('#pEmpty');
     if (!list.length) {
       if (!empty) {
-        empty = el('div', null, '还没有隧道');
+        empty = el('div', null, t('panel.empty'));
         empty.id = 'pEmpty';
         empty.style.cssText = 'padding:14px 0; font-size:12px; color:var(--label-2); text-align:center';
         host.appendChild(empty);
@@ -60,13 +60,15 @@
 
   function paint(state) {
     FK.last = state;
+    // 语言由主进程解析好随状态推来；变了就把静态文案刷一遍，空列表那行走下面的重绘。
+    if (FK.setLang(state.lang)) { const e = $('#pEmpty'); if (e) e.remove(); }
     const f = state.frpc;
     $('#pDot').className = `dot ${f.connected ? 'on' : f.running ? 'pending' : ''}`;
-    $('#pState').textContent = f.connected ? '已连接' : f.running ? '连接中' : '未运行';
-    $('#pHost').textContent = state.settings.serverAddr || '未配置';
+    $('#pState').textContent = t(f.connected ? 'conn.connected' : f.running ? 'conn.connectingShort' : 'conn.idle');
+    $('#pHost').textContent = state.settings.serverAddr || t('rail.notConfigured');
     $('#pUp').textContent = state.metrics.dashOk ? rate(state.metrics.rate.up) : '—';
     $('#pDown').textContent = state.metrics.dashOk ? rate(state.metrics.rate.down) : '—';
-    $('#pPauseLabel').textContent = f.running ? '暂停全部' : '连接';
+    $('#pPauseLabel').textContent = t(f.running ? 'panel.pauseAll' : 'btn.connect');
     renderRows(state.tunnels);
     reportHeight();
   }
@@ -82,6 +84,8 @@
 
   async function boot() {
     const state = await window.ferry.bootstrap();
+    FK.i18n.setLang(state.lang);
+    FK.i18n.applyStatic(document);
     paint(state);
     window.ferry.onState(paint);
 

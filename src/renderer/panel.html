@@ -13,17 +13,17 @@
 <div class="panel">
   <div class="panel-head">
     <span class="dot" id="pDot"></span>
-    <span class="panel-state" id="pState">未运行</span>
+    <span class="panel-state" id="pState"></span>
     <span class="mono panel-host" id="pHost">—</span>
   </div>
 
   <div class="panel-rates">
     <div class="panel-rate">
-      <div class="panel-rate-label">上行</div>
+      <div class="panel-rate-label" data-i18n="rail.up">上行</div>
       <div class="mono panel-rate-value" id="pUp">—</div>
     </div>
     <div class="panel-rate">
-      <div class="panel-rate-label">下行</div>
+      <div class="panel-rate-label" data-i18n="rail.down">下行</div>
       <div class="mono panel-rate-value" id="pDown">—</div>
     </div>
   </div>
@@ -31,12 +31,13 @@
   <div class="panel-list" id="pList"></div>
 
   <div class="panel-menu">
-    <button class="btn btn-secondary btn-block" id="pOpen" style="margin:0">打开主窗口</button>
-    <button class="panel-item" id="pPause"><span id="pPauseLabel">暂停全部</span><span class="mono">⌘⇧P</span></button>
-    <button class="panel-item" id="pQuit"><span>退出 Ferry</span><span class="mono">⌘Q</span></button>
+    <button class="btn btn-secondary btn-block" id="pOpen" style="margin:0" data-i18n="panel.open">打开主窗口</button>
+    <button class="panel-item" id="pPause"><span id="pPauseLabel"></span><span class="mono">⌘⇧P</span></button>
+    <button class="panel-item" id="pQuit"><span data-i18n="panel.quit">退出 Ferry</span><span class="mono">⌘Q</span></button>
   </div>
 </div>
 
+<script src="../shared/i18n.js"></script>
 <script src="js/util.js"></script>
 <script src="js/panel.js"></script>
 </body>

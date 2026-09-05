@@ -1,11 +1,10 @@
 'use strict';
 // 03 / 流量统计 —— 四张概览卡、24 小时柱状图、按隧道明细。
 //
-// 字节数和连接数只有配了 frps 面板才有；没配就诚实显示 —，
-// 并在图表旁写清楚为什么。
+// 字节数和连接数只有配了 frps 面板才有；没配就显示 —，并在图表旁说明原因。
 
 (() => {
-  const { $, el, bytes, ms, duration } = FK;
+  const { $, el, bytes, ms, duration, t } = FK;
 
   function card(label, value, note) {
     const n = el('div', 'card stat');
@@ -26,20 +25,28 @@
 
     host.append(
       card(
-        '今日流量',
+        t('stats.card.today'),
         hasDash ? bytes(totals.up + totals.down) : '—',
-        hasDash ? `上行 ${bytes(totals.up)} / 下行 ${bytes(totals.down)}` : '需要 frps 面板'
+        hasDash
+          ? t('stats.card.todayNote', { up: bytes(totals.up), down: bytes(totals.down) })
+          : t('stats.needDash')
       ),
       card(
-        '活跃连接',
+        t('stats.card.conns'),
         hasDash ? String(totals.conns) : '—',
-        hasDash ? `峰值 ${m.peakConns}` : '需要 frps 面板'
+        hasDash ? t('stats.card.connsNote', { n: m.peakConns }) : t('stats.needDash')
       ),
-      card('平均延迟', ms(m.latency), m.latency == null ? '未连接' : '控制端口拨测 · 近一小时'),
       card(
-        '在线时长',
+        t('stats.card.latency'),
+        ms(m.latency),
+        t(m.latency == null ? 'stats.notConnected' : 'stats.card.latencyNote')
+      ),
+      card(
+        t('stats.card.uptime'),
         state.frpc.running ? duration(state.frpc.since) : '—',
-        m.disconnects ? `断线 ${m.disconnects} 次` : state.frpc.running ? '无断线记录' : 'frpc 未运行'
+        m.disconnects
+          ? t('stats.card.disconnects', { n: m.disconnects })
+          : t(state.frpc.running ? 'stats.card.noDisconnects' : 'stats.card.notRunning')
       )
     );
   }
@@ -57,7 +64,7 @@
       const down = el('div', 'down');
       down.style.height = `${(b.down / peak) * 100}%`;
       if (!b.up && !b.down) col.classList.add('is-empty');
-      col.title = `上行 ${bytes(b.up)} · 下行 ${bytes(b.down)}`;
+      col.title = t('chart.colTitle', { up: bytes(b.up), down: bytes(b.down) });
       col.append(up, down);
       host.appendChild(col);
     }
@@ -68,12 +75,10 @@
     for (let i = 0; i < 5; i++) {
       const hoursAgo = 24 - Math.round((i * 24) / 4);
       const h = (nowH - hoursAgo + 24 + 24) % 24;
-      axis.appendChild(el('span', null, i === 4 ? '现在' : `${String(h).padStart(2, '0')}:00`));
+      axis.appendChild(el('span', null, i === 4 ? t('stats.now') : `${String(h).padStart(2, '0')}:00`));
     }
 
-    $('#chartNote').textContent = state.metrics.dashOk
-      ? '浅色为上行，深色为下行 · 每小时增量，Ferry 运行期间采样'
-      : '未配置 frps 面板，暂无流量数据（设置 › 流量统计来源）';
+    $('#chartNote').textContent = t(state.metrics.dashOk ? 'stats.chartNoteOk' : 'stats.chartNoteNoDash');
   }
 
   function renderTable(state) {
@@ -81,28 +86,28 @@
     body.textContent = '';
     if (!state.tunnels.length) {
       const tr = el('tr');
-      const td = el('td', null, '还没有隧道。');
+      const td = el('td', null, t('stats.emptyRows'));
       td.colSpan = 6;
       td.style.color = 'var(--label-2)';
       tr.appendChild(td);
       body.appendChild(tr);
       return;
     }
-    for (const t of state.tunnels) {
+    for (const tn of state.tunnels) {
       const tr = el('tr');
-      const type = el('td', null, t.type);
+      const type = el('td', null, tn.type);
       type.style.textTransform = 'uppercase';
       type.style.color = 'var(--label-2)';
-      const state_ = el('td', null, t.enabled ? t.state : '已停用');
-      state_.style.color =
-        t.kind === 'error' ? 'var(--err)' : t.kind === 'on' ? 'var(--ok)' : 'var(--label-2)';
+      const stateCell = el('td', null, tn.enabled ? tn.state : t('row.disabled'));
+      stateCell.style.color =
+        tn.kind === 'error' ? 'var(--err)' : tn.kind === 'on' ? 'var(--ok)' : 'var(--label-2)';
       tr.append(
-        el('td', null, t.name),
+        el('td', null, tn.name),
         type,
-        el('td', 'mono', t.conns == null ? '—' : String(t.conns)),
-        el('td', 'mono', t.up == null ? '—' : bytes(t.up)),
-        el('td', 'mono', t.down == null ? '—' : bytes(t.down)),
-        state_
+        el('td', 'mono', tn.conns == null ? '—' : String(tn.conns)),
+        el('td', 'mono', tn.up == null ? '—' : bytes(tn.up)),
+        el('td', 'mono', tn.down == null ? '—' : bytes(tn.down)),
+        stateCell
       );
       body.appendChild(tr);
     }

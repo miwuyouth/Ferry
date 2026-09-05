@@ -8,6 +8,7 @@ const net = require('net');
 const http = require('http');
 const path = require('path');
 const toml = require('./toml');
+const { t } = require('../shared/i18n');
 
 const CANDIDATES = [
   '/opt/homebrew/bin/frpc',
@@ -91,7 +92,7 @@ class Frpc extends EventEmitter {
   verifyConfig() {
     return new Promise((resolve) => {
       const bin = this.resolveBinary();
-      if (!bin) return resolve({ ok: false, message: '找不到 frpc 可执行文件' });
+      if (!bin) return resolve({ ok: false, message: t('frpc.notFound') });
       execFile(bin, ['verify', '-c', this.store.configPath], { timeout: 8000 }, (err, stdout, stderr) => {
         const out = String(stderr || stdout).trim();
         resolve(err ? { ok: false, message: out || String(err.message) } : { ok: true, message: out });
@@ -105,13 +106,13 @@ class Frpc extends EventEmitter {
     if (this.proc) return { ok: true };
     const bin = this.resolveBinary();
     if (!bin) {
-      const message = '找不到 frpc 可执行文件。请用 Homebrew 安装（brew install frp），或在设置里指定路径。';
+      const message = t('frpc.notFoundLong');
       this._setState({ error: message });
       this.logs.note('error', message);
       return { ok: false, message };
     }
     if (!this.store.settings.serverAddr) {
-      const message = '尚未填写服务器地址。';
+      const message = t('frpc.noAddr');
       this._setState({ error: message });
       return { ok: false, message };
     }
@@ -123,11 +124,11 @@ class Frpc extends EventEmitter {
     const check = await this.verifyConfig();
     if (!check.ok) {
       this._setState({ error: check.message });
-      this.logs.note('error', `配置校验失败：${check.message}`);
+      this.logs.note('error', t('frpc.checkFailed', { err: check.message }));
       return { ok: false, message: check.message };
     }
 
-    this.logs.note('info', `启动 ${bin} -c ${this.store.configPath}`);
+    this.logs.note('info', t('frpc.launching', { bin, cfg: this.store.configPath }));
     // frpc 无论输出到不到终端都会上 ANSI 颜色码，日志解析器负责剥掉。
     const proc = spawn(bin, ['-c', this.store.configPath], {
       stdio: ['ignore', 'pipe', 'pipe']
@@ -148,16 +149,16 @@ class Frpc extends EventEmitter {
       this.proc = null;
       this._setState({ running: false, connected: false, runId: '' });
       if (this.stopping) {
-        this.logs.note('info', 'frpc 已停止。');
+        this.logs.note('info', t('frpc.stopped'));
         return;
       }
-      this.logs.note('error', `frpc 意外退出（code ${code ?? '-'}${signal ? `, signal ${signal}` : ''}）。`);
+      this.logs.note('error', t('frpc.exited', { code: code ?? '-', signal: signal ? `, signal ${signal}` : '' }));
       this.emit('crash', { code, signal });
       this._scheduleRetry();
     });
 
     proc.on('error', (err) => {
-      this.logs.note('error', `无法启动 frpc：${err.message}`);
+      this.logs.note('error', t('frpc.spawnFailed', { err: err.message }));
       this._setState({ running: false, error: err.message });
     });
 
@@ -172,7 +173,7 @@ class Frpc extends EventEmitter {
       this._setState({ connected: true, runId: m ? m[1] : '', error: '' });
     } else if (/login to server failed/.test(text)) {
       const m = /login to server failed: (.+)/.exec(text);
-      this._setState({ connected: false, error: m ? m[1].split('\n')[0] : '登录失败' });
+      this._setState({ connected: false, error: m ? m[1].split('\n')[0] : t('frpc.loginFailed') });
     } else if (/control connection closed|try to reconnect to server/.test(text)) {
       this._setState({ connected: false });
     }
@@ -181,13 +182,13 @@ class Frpc extends EventEmitter {
   _scheduleRetry() {
     if (!this.store.settings.autoReconnect) return;
     if (this.retries >= MAX_RETRIES) {
-      this.logs.note('error', `已重试 ${MAX_RETRIES} 次，放弃自动重连。`);
+      this.logs.note('error', t('frpc.gaveup', { n: MAX_RETRIES }));
       this.emit('gaveup');
       return;
     }
     const wait = BACKOFF[Math.min(this.retries, BACKOFF.length - 1)];
     this.retries++;
-    this.logs.note('info', `${wait / 1000}s 后重试（${this.retries}/${MAX_RETRIES}）`);
+    this.logs.note('info', t('frpc.retry', { s: wait / 1000, i: this.retries, n: MAX_RETRIES }));
     clearTimeout(this.retryTimer);
     this.retryTimer = setTimeout(() => this.start(), wait);
   }
@@ -220,15 +221,15 @@ class Frpc extends EventEmitter {
     this.writeConfig();
     const check = await this.verifyConfig();
     if (!check.ok) {
-      this.logs.note('error', `配置校验失败，未重载：${check.message}`);
+      this.logs.note('error', t('frpc.reloadSkipped', { err: check.message }));
       return { ok: false, message: check.message };
     }
     try {
       await this.api('GET', '/api/reload');
-      this.logs.note('info', '配置已热重载。');
+      this.logs.note('info', t('frpc.reloaded'));
       return { ok: true };
     } catch (err) {
-      this.logs.note('warn', `热重载失败（${err.message}），改为重启 frpc。`);
+      this.logs.note('warn', t('frpc.reloadFailed', { err: err.message }));
       await this.stop();
       return this.start();
     }
@@ -245,7 +246,7 @@ class Frpc extends EventEmitter {
   api(method, apiPath) {
     return new Promise((resolve, reject) => {
       const { port, user, password } = this.store.admin;
-      if (!port) return reject(new Error('admin 接口未就绪'));
+      if (!port) return reject(new Error(t('frpc.adminNotReady')));
       const req = http.request(
         {
           host: '127.0.0.1',
@@ -265,7 +266,7 @@ class Frpc extends EventEmitter {
           });
         }
       );
-      req.on('timeout', () => req.destroy(new Error('admin 接口超时')));
+      req.on('timeout', () => req.destroy(new Error(t('frpc.adminTimeout'))));
       req.on('error', reject);
       req.end();
     });

@@ -11,6 +11,8 @@ const { Frpc, probeLatency } = require('./frpc');
 const { Metrics } = require('./metrics');
 const { createTray, destroyTray } = require('./tray');
 const toml = require('./toml');
+const i18n = require('../shared/i18n');
+const { t } = i18n;
 
 let store, logs, frpc, metrics, mainWindow, tray;
 let quitting = false;
@@ -87,22 +89,22 @@ function broadcast(channel, payload) {
 function tunnelView() {
   const status = metrics.proxyStatus;
   const dash = metrics.dash && metrics.dash.ok ? metrics.dash.byName : null;
-  return store.tunnels.map((t) => {
-    const st = status[t.name];
-    const d = dash ? dash[t.name] : null;
-    let state = '已停止';
+  return store.tunnels.map((tn) => {
+    const st = status[tn.name];
+    const d = dash ? dash[tn.name] : null;
+    let state = t('st.stopped');
     let kind = 'off';
-    if (t.enabled) {
-      if (!frpc.state.running) { state = '未运行'; kind = 'off'; }
-      else if (!st) { state = '等待启动'; kind = 'pending'; }
-      else if (st.status === 'running') { state = '运行中'; kind = 'on'; }
+    if (tn.enabled) {
+      if (!frpc.state.running) { state = t('st.notRunning'); kind = 'off'; }
+      else if (!st) { state = t('st.waiting'); kind = 'pending'; }
+      else if (st.status === 'running') { state = t('st.running'); kind = 'on'; }
       else if (st.status === 'start error' || st.status === 'check failed') {
-        state = st.err ? st.err.split('\n')[0] : '启动失败';
+        state = st.err ? st.err.split('\n')[0] : t('st.startFailed');
         kind = 'error';
-      } else { state = st.status === 'new' || st.status === 'wait start' ? '启动中' : st.status; kind = 'pending'; }
+      } else { state = st.status === 'new' || st.status === 'wait start' ? t('st.starting') : st.status; kind = 'pending'; }
     }
     return {
-      ...t,
+      ...tn,
       state,
       kind,
       remoteAddr: st ? st.remoteAddr : '',
@@ -127,6 +129,8 @@ function fullState() {
       dashError: metrics.dash ? metrics.dash.error : ''
     },
     settings: store.settings,
+    // 界面用不着自己判断 'system' 到底是哪种语言，主进程解析好一起推下去。
+    lang: i18n.getLang(),
     // 界面显示用的短路径（设计稿底栏写的就是 ~/Library/… 这种形态）。
     // 真实路径留在主进程，config:reveal 用它。
     configPath: store.configPath.replace(os.homedir(), '~')
@@ -162,7 +166,7 @@ function registerIpc() {
   ipcMain.handle('log:clear', () => { logs.clear(); return true; });
   ipcMain.handle('log:export', async () => {
     const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
-      title: '导出日志',
+      title: t('dlg.exportLog'),
       defaultPath: path.join(app.getPath('downloads'), `frpc-${new Date().toISOString().slice(0, 10)}.log`)
     });
     if (canceled || !filePath) return { ok: false };
@@ -180,10 +184,10 @@ function registerIpc() {
   ipcMain.handle('frpc:test', async (_e, payload) => {
     const addr = payload.serverAddr;
     const port = Number(payload.serverPort) || 7000;
-    if (!addr) return { ok: false, message: '请先填写服务器地址。' };
+    if (!addr) return { ok: false, message: t('err.addrRequired') };
     const ms = await probeLatency(addr, port, 5000);
-    if (ms == null) return { ok: false, message: `无法连接 ${addr}:${port}（超时或被拒绝）。` };
-    return { ok: true, message: `${addr}:${port} 可达，握手 ${Math.round(ms)} ms。` };
+    if (ms == null) return { ok: false, message: t('test.unreachable', { addr, port }) };
+    return { ok: true, message: t('test.ok', { addr, port, ms: Math.round(ms) }) };
   });
 
   ipcMain.handle('settings:patch', async (_e, patch) => {
@@ -197,6 +201,7 @@ function registerIpc() {
       ('logLevel' in patch && patch.logLevel !== before.logLevel);
 
     const next = store.patchSettings(patch);
+    if ('language' in patch) i18n.setLang(i18n.resolve(next.language, app.getLocale()));
     if ('launchAtLogin' in patch) {
       app.setLoginItemSettings({ openAtLogin: !!patch.launchAtLogin, openAsHidden: true });
     }
@@ -236,7 +241,7 @@ function registerIpc() {
 
   ipcMain.handle('config:export', async () => {
     const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
-      title: '导出 frpc.toml',
+      title: t('dlg.exportToml'),
       defaultPath: path.join(app.getPath('downloads'), 'frpc.toml')
     });
     if (canceled || !filePath) return { ok: false };
@@ -246,9 +251,9 @@ function registerIpc() {
 
   ipcMain.handle('config:import', async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
-      title: '导入 frpc.toml',
+      title: t('dlg.importToml'),
       properties: ['openFile'],
-      filters: [{ name: 'frp 配置', extensions: ['toml'] }]
+      filters: [{ name: t('dlg.tomlFilter'), extensions: ['toml'] }]
     });
     if (canceled || !filePaths.length) return { ok: false };
     try {
@@ -266,7 +271,7 @@ function registerIpc() {
 
   ipcMain.handle('frpc:locate', async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog(mainWindow, {
-      title: '选择 frpc 可执行文件',
+      title: t('dlg.chooseFrpc'),
       properties: ['openFile'],
       defaultPath: '/usr/local/bin'
     });
@@ -300,12 +305,14 @@ app.whenReady().then(async () => {
   applyDockIcon();
 
   store = new Store();
+  // 语言得在建窗口、托盘和拉起 frpc 之前定下来，否则首批文案会用错语言。
+  i18n.setLang(i18n.resolve(store.settings.language, app.getLocale()));
   logs = new LogBuffer(store.logPath, (batch) => broadcast('push:logs', batch));
   frpc = new Frpc(store, logs);
   metrics = new Metrics(store, frpc);
 
-  frpc.on('crash', () => notify('Ferry', 'frpc 进程意外退出，正在尝试重连。'));
-  frpc.on('gaveup', () => notify('Ferry', '自动重连已达上限，连接未恢复。'));
+  frpc.on('crash', () => notify('Ferry', t('notify.crash')));
+  frpc.on('gaveup', () => notify('Ferry', t('notify.gaveup')));
   frpc.on('state', (s) => { if (tray) tray.update(s, metrics); });
 
   registerIpc();
@@ -326,12 +333,12 @@ app.whenReady().then(async () => {
     if (frpc.state.running) await frpc.stop();
     else await frpc.start();
   })) {
-    logs.note('warn', '快捷键 ⌘⇧P 注册失败，可能已被其它应用占用。');
+    logs.note('warn', t('shortcut.failed'));
   }
 
   if (store.settings.autoConnect && store.settings.serverAddr) {
     const res = await frpc.start();
-    if (!res.ok) logs.note('warn', `自动连接未启动：${res.message}`);
+    if (!res.ok) logs.note('warn', t('autoconnect.failed', { err: res.message }));
   }
 
   app.on('activate', () => showMainWindow());

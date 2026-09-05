@@ -3,6 +3,7 @@
 
 const { Tray, BrowserWindow, nativeImage, screen, app } = require('electron');
 const path = require('path');
+const { t } = require('../shared/i18n');
 
 const PANEL_W = 312;
 const PANEL_H = 380;   // 首帧的兜底高度，渲染层量出真实内容高度后会覆盖它
@@ -103,9 +104,7 @@ function createTray({ onShow, onQuit }) {
     update(state, metrics) {
       const rate = metrics ? fmtRate(metrics.rate.down) : '';
       tray.setTitle(rate ? ` ${rate}` : '');
-      tray.setToolTip(
-        state.connected ? 'Ferry — 已连接' : state.running ? 'Ferry — 连接中' : 'Ferry — 未运行'
-      );
+      tray.setToolTip(t(state.connected ? 'tray.connected' : state.running ? 'tray.connecting' : 'tray.idle'));
     },
     hidePanel() { if (panel && !panel.isDestroyed() && panel.isVisible()) panel.hide(); },
 

@@ -2,13 +2,13 @@
 // 主窗口的壳：导航、标题栏、左栏状态，以及各视图的分发。
 
 (() => {
-  const { $, $$, rate, duration } = FK;
+  const { $, $$, rate, duration, t } = FK;
 
-  const TITLES = {
-    list: ['隧道', (s) => `${s.tunnels.length} 条代理 · ${s.tunnels.filter((t) => t.kind === 'on').length} 个运行中`],
-    log: ['实时日志', () => 'frpc 标准输出'],
-    stats: ['流量与连接', () => '近 24 小时'],
-    settings: ['设置', () => 'frpc 客户端配置']
+  const SUBS = {
+    list: (s) => t('sub.list', { n: s.tunnels.length, on: s.tunnels.filter((x) => x.kind === 'on').length }),
+    log: () => t('sub.log'),
+    stats: () => t('sub.stats'),
+    settings: () => t('sub.settings')
   };
 
   // 左栏两条速率条是相对刻度：以本次会话见过的峰值为满格，
@@ -19,7 +19,7 @@
   let state = null;
 
   function setView(next) {
-    if (!TITLES[next]) return;
+    if (!SUBS[next]) return;
     view = next;
     for (const n of $$('.view')) n.classList.toggle('is-active', n.dataset.view === next);
     for (const n of $$('.nav-item')) n.classList.toggle('is-active', n.dataset.go === next);
@@ -27,39 +27,38 @@
   }
 
   function paintChrome() {
-    const [title, sub] = TITLES[view];
-    $('#viewTitle').textContent = title;
-    $('#viewSub').textContent = sub(state);
+    $('#viewTitle').textContent = t(`title.${view}`);
+    $('#viewSub').textContent = SUBS[view](state);
 
     const f = state.frpc;
     const tag = $('#connTag');
     if (f.connected) {
-      tag.textContent = `已连接 ${state.settings.serverAddr}`;
+      tag.textContent = t('conn.connectedTo', { addr: state.settings.serverAddr });
       tag.className = 'tag tag-accent';
     } else if (f.running) {
-      tag.textContent = '连接中…';
+      tag.textContent = t('conn.connecting');
       tag.className = 'tag tag-neutral';
     } else {
-      tag.textContent = f.error ? '未连接' : '未运行';
+      tag.textContent = t(f.error ? 'conn.disconnected' : 'conn.idle');
       tag.className = 'tag tag-outline';
     }
     tag.title = f.error || '';
-    $('#btnPower').textContent = f.running ? '断开' : '连接';
+    $('#btnPower').textContent = t(f.running ? 'btn.disconnect' : 'btn.connect');
   }
 
   function paintRail() {
     const f = state.frpc;
     const s = state.settings;
-    $('#railHost').textContent = s.serverAddr || '未配置';
+    $('#railHost').textContent = s.serverAddr || t('rail.notConfigured');
     $('#railMeta').textContent = s.serverAddr
       ? `:${s.serverPort} · ${s.protocol}${f.runId ? ` · run ${f.runId.slice(0, 8)}` : ''}`
-      : '在设置中填写服务器地址';
+      : t('rail.fillServer');
 
     const dot = $('#railDot');
     dot.className = `dot ${f.connected ? 'on' : f.running ? 'pending' : ''}`;
     $('#railBeat').textContent = f.connected
-      ? `已连接 ${duration(f.since)}`
-      : f.running ? '正在连接…' : f.error ? '连接失败' : '未运行';
+      ? t('rail.connectedFor', { d: duration(f.since) })
+      : f.running ? t('rail.connecting') : t(f.error ? 'rail.failed' : 'conn.idle');
 
     const m = state.metrics;
     peak = Math.max(peak, m.rate.up, m.rate.down);
@@ -67,6 +66,16 @@
     $('#railDown').textContent = m.dashOk ? rate(m.rate.down) : '—';
     $('#railUpBar').style.width = m.dashOk ? `${Math.min(100, (m.rate.up / peak) * 100)}%` : '0%';
     $('#railDownBar').style.width = m.dashOk ? `${Math.min(100, (m.rate.down / peak) * 100)}%` : '0%';
+  }
+
+  // 语言由主进程解析好（settings.language 为 system 时按系统 locale 落地），
+  // 跟着状态推送一起过来。变了就重刷静态文案 + 各视图里 JS 生成的标签。
+  function syncLang(next) {
+    if (!FK.setLang(next)) return;
+    FK.tunnels.retext();
+    FK.logs.retext();
+    FK.settings.retext();
+    FK.onboarding.retext();
   }
 
   function paint() {
@@ -90,6 +99,9 @@
     const b = await window.ferry.bootstrap();
     state = b;
 
+    FK.i18n.setLang(b.lang);
+    FK.i18n.applyStatic(document);
+
     FK.tunnels.init();
     FK.logs.init(b.logs);
     FK.stats.init();
@@ -105,7 +117,7 @@
     });
     $('#btnOnboard').addEventListener('click', () => FK.onboarding.open(state.settings));
 
-    window.ferry.onState((s) => { state = s; paint(); });
+    window.ferry.onState((s) => { state = s; syncLang(s.lang); paint(); });
     window.ferry.onLogs((batch) => FK.logs.push(batch));
 
     // 侧栏选中态跟着窗口是否是前台走——聚焦时是实心 accent，

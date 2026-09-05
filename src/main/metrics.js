@@ -9,6 +9,7 @@
 const http = require('http');
 const https = require('https');
 const { EventEmitter } = require('events');
+const { t } = require('../shared/i18n');
 
 const STATUS_MS = 2000;   // frpc 本地接口，便宜
 const DASH_MS = 5000;     // frps 面板，走公网
@@ -45,7 +46,7 @@ function getJSON(url, auth, timeout = 6000) {
         });
       }
     );
-    req.on('timeout', () => req.destroy(new Error('超时')));
+    req.on('timeout', () => req.destroy(new Error(t('net.timeout'))));
     req.on('error', reject);
     req.end();
   });

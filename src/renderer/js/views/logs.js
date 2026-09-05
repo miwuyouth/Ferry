@@ -5,12 +5,12 @@
 // 中文只出现在界面 chrome 和 Ferry 自己写的那几行上。
 
 (() => {
-  const { $, el } = FK;
-  const FILTERS = [
-    { label: '全部', value: 'all' },
-    { label: '信息', value: 'info' },
-    { label: '警告', value: 'warn' },
-    { label: '错误', value: 'error' }
+  const { $, el, t } = FK;
+  const filters = () => [
+    { label: t('filter.all'), value: 'all' },
+    { label: t('log.info'), value: 'info' },
+    { label: t('log.warn'), value: 'warn' },
+    { label: t('log.error'), value: 'error' }
   ];
   const MAX_NODES = 3000;
 
@@ -72,8 +72,16 @@
   function updateStatus() {
     const shown = lines.filter(passes).length;
     const level = FK.app.state ? FK.app.state.settings.logLevel : 'info';
-    $('#logStatus').textContent = `日志级别 ${level} · 保留 7 天 · ${shown} 行`;
+    $('#logStatus').textContent = t('log.status', { level, n: shown });
     $('#navCountLogs').textContent = lines.length ? String(lines.length) : '';
+  }
+
+  function bindFilters() {
+    FK.seg($('#logFilters'), filters(), filter, (v) => {
+      filter = v;
+      bindFilters();
+      rebuild();
+    });
   }
 
   FK.logs = {
@@ -81,12 +89,7 @@
       lines = initial || [];
       lastId = lines.length ? lines[lines.length - 1].id : 0;
 
-      const bind = () => FK.seg($('#logFilters'), FILTERS, filter, (v) => {
-        filter = v;
-        bind();
-        rebuild();
-      });
-      bind();
+      bindFilters();
 
       $('#autoScroll').addEventListener('change', (e) => {
         autoScroll = e.target.checked;
@@ -112,6 +115,8 @@
       append(fresh);
     },
 
-    update() { updateStatus(); }
+    update() { updateStatus(); },
+
+    retext() { bindFilters(); updateStatus(); }
   };
 })();
