@@ -26,37 +26,37 @@
   <img src="docs/screenshots/main-window.png" width="90%" alt="Ferry Interface Preview">
 </p>
 
-## ✨ Features
+## Features
 
-- 🎨 **Modern Cross-Platform UI**: Clean, refined interface following modern design principles, with seamless support for light and dark modes, and menu bar / system tray integration.
-- 🚀 **Process Supervisor & Self-Healing**: Fully manages the `frpc` background process, with auto-start on boot, smart auto-reconnect on disconnect, and auto-recovery on crash.
-- 🛠️ **Visual Tunnel Management**: Easily configure TCP, UDP, HTTP, and HTTPS proxy rules through forms, with support for individual tunnel toggling and hot reloading.
-- 📊 **Status & Traffic Monitoring**: View connection status, average latency, uptime, and network throughput in real time, accompanied by a structured runtime log viewer.
-- 🌐 **Internationalization (i18n)**: Built-in multi-language support (English / Simplified Chinese), following system preferences or manual selection.
-- 🔄 **Flexible Import & Export**: Import and export standard `frpc.toml` configurations for quick synchronization across multiple devices.
+- **Modern Cross-Platform UI**: Clean, refined interface following modern design principles, with seamless support for light and dark modes, and menu bar / system tray integration.
+- **Process Supervisor & Self-Healing**: Fully manages the `frpc` background process, with auto-start on boot, smart auto-reconnect on disconnect, and auto-recovery on crash.
+- **Visual Tunnel Management**: Easily configure TCP, UDP, HTTP, and HTTPS proxy rules through forms, with support for individual tunnel toggling and hot reloading.
+- **Status & Traffic Monitoring**: View connection status, average latency, uptime, and network throughput in real time, accompanied by a structured runtime log viewer.
+- **Internationalization (i18n)**: Built-in multi-language support (English / Simplified Chinese), following system preferences or manual selection.
+- **Flexible Import & Export**: Import and export standard `frpc.toml` configurations for quick synchronization across multiple devices.
 
 ---
 
-## 📥 Download & Installation
+## Download & Installation
 
 ### Option 1: Direct Download (Recommended)
 
 Visit [GitHub Releases](https://github.com/miwuyouth/Ferry/releases/latest) to download the latest installer for your operating system:
 
-#### 🍏 macOS
-* **Apple Silicon (M series)**: Download `Ferry-x.x.x-arm64.dmg`
-* **Intel**: Download `Ferry-x.x.x.dmg`
+#### macOS
+* **Apple Silicon (M series)**: `Ferry-x.x.x-arm64.dmg`
+* **Intel**: `Ferry-x.x.x.dmg`
 
 > **"Cannot be opened" prompt on macOS?**  
 > Because the app is not signed with a paid Apple Developer certificate, if macOS Gatekeeper blocks it on first open, locate the app in Finder, **Right-click -> Open**, and click "Open" in the confirmation dialog (only needed once).
 
-#### 🪟 Windows
-* **Installer**: Download `Ferry-Setup-x.x.x.exe`
-* **Portable ZIP**: Download `Ferry-x.x.x-win-x64.zip`
+#### Windows
+* **Installer**: `Ferry-Setup-x.x.x.exe`
+* **Portable ZIP**: `Ferry-x.x.x-win-x64.zip`
 
-#### 🐧 Linux
-* **AppImage (Recommended, portable)**: Download `Ferry-x.x.x.AppImage` (Run `chmod +x Ferry-*.AppImage` before launching)
-* **Debian / Ubuntu**: Download `Ferry-x.x.x-amd64.deb`
+#### Linux
+* **AppImage (Recommended, portable)**: `Ferry-x.x.x.AppImage` (Run `chmod +x Ferry-*.AppImage` before launching)
+* **Debian / Ubuntu**: `Ferry-x.x.x-amd64.deb`
 
 ---
 
@@ -83,7 +83,7 @@ npm run dist:linux  # Linux (.AppImage / .deb)
 
 ---
 
-## ⚙️ FAQ
+## FAQ
 
 <details>
 <summary><b>1. What should I do if the frpc binary is not found?</b></summary>
@@ -107,7 +107,7 @@ All configurations and local logs are securely saved in standard OS app data dir
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions, issues, and feature requests are welcome!
 
@@ -119,6 +119,6 @@ Contributions, issues, and feature requests are welcome!
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the [MIT License](LICENSE).

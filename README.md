@@ -5,7 +5,7 @@
 <h1 align="center">Ferry</h1>
 
 <p align="center">
-  高颜值、跨平台轻量级 FRP 桌面客户端
+  跨平台轻量级 FRP 桌面客户端
 </p>
 
 <p align="center">
@@ -26,37 +26,37 @@
   <img src="docs/screenshots/main-window.png" width="90%" alt="Ferry 界面预览">
 </p>
 
-## ✨ 特性
+## 特性
 
-- 🎨 **跨平台现代化界面**：遵循 Apple 设计规范的精致 UI，完美适配浅色与深色模式，原生菜单栏/托盘常驻与快捷呼出。
-- 🚀 **进程托管与自愈**：全自动守护 `frpc` 子进程，支持开机自启、掉线智能重试与崩溃自动恢复。
-- 🛠️ **可视化隧道管理**：表单化配置 TCP、UDP、HTTP、HTTPS 代理规则，支持单条隧道独立启停与动态热重载。
-- 📊 **状态与流量监控**：实时查看连接状态、平均延迟、在线时长与网络吞吐，提供结构化的运行日志查看器。
-- 🌐 **国际化支持**：内置多语言支持（简体中文 / 英文），可跟随系统偏好或手动切换。
-- 🔄 **配置灵活导入导出**：支持标准 `frpc.toml` 格式的导入与导出，方便在多台设备间快速同步。
+- **跨平台现代化界面**：遵循现代界面设计规范，适配浅色与深色模式，原生系统托盘/菜单栏常驻与快捷呼出。
+- **进程托管与自愈**：自动守护 `frpc` 子进程，支持开机自启、掉线智能重试与异常崩溃自动恢复。
+- **可视化隧道管理**：表单化配置 TCP、UDP、HTTP、HTTPS 代理规则，支持单条隧道独立启停与动态热重载。
+- **状态与流量监控**：实时查看连接状态、平均延迟、在线时长与网络吞吐，提供结构化的运行日志查看器。
+- **多语言支持**：内置国际化（简体中文 / 英文），可跟随系统偏好或手动切换。
+- **配置导入与导出**：支持标准 `frpc.toml` 格式的导入与导出，方便在多台设备间快速同步迁移。
 
 ---
 
-## 📥 下载与安装
+## 下载与安装
 
 ### 方式一：直接下载安装包（推荐）
 
 访问 [GitHub Releases](https://github.com/miwuyouth/Ferry/releases/latest) 下载对应平台的最新安装包：
 
-#### 🍏 macOS
-* **Apple Silicon (M 系列芯片)**：请下载 `Ferry-x.x.x-arm64.dmg`
-* **Intel 芯片**：请下载 `Ferry-x.x.x.dmg`
+#### macOS
+* **Apple Silicon (M 系列芯片)**：`Ferry-x.x.x-arm64.dmg`
+* **Intel 芯片**：`Ferry-x.x.x.dmg`
 
 > **macOS 首次打开提示「无法打开」？**  
 > 由于应用尚未配置付费的 Apple 开发者证书签名，首次打开如遇 macOS Gatekeeper 拦截，请在 Finder 中对应用点击 **右键 -> 打开**，并在弹出的确认对话框中再次点击「打开」即可（仅需操作一次）。
 
-#### 🪟 Windows
-* **安装程序**：请下载 `Ferry-Setup-x.x.x.exe`
-* **便携绿色版**：请下载 `Ferry-x.x.x-win-x64.zip`
+#### Windows
+* **安装程序**：`Ferry-Setup-x.x.x.exe`
+* **便携绿色版**：`Ferry-x.x.x-win-x64.zip`
 
-#### 🐧 Linux
-* **AppImage（推荐，即开即用）**：请下载 `Ferry-x.x.x.AppImage`（下载后需赋予执行权限：`chmod +x Ferry-*.AppImage`）
-* **Debian / Ubuntu**：请下载 `Ferry-x.x.x-amd64.deb`
+#### Linux
+* **AppImage（推荐，即开即用）**：`Ferry-x.x.x.AppImage`（下载后需赋予执行权限：`chmod +x Ferry-*.AppImage`）
+* **Debian / Ubuntu**：`Ferry-x.x.x-amd64.deb`
 
 ---
 
@@ -83,7 +83,7 @@ npm run dist:linux  # Linux (.AppImage / .deb)
 
 ---
 
-## ⚙️ 常见问题
+## 常见问题
 
 <details>
 <summary><b>1. 找不到 frpc 可执行文件怎么办？</b></summary>
@@ -107,7 +107,7 @@ frp 的流量统计数据是由服务端（frps）统计的。如需查看流量
 
 ---
 
-## 🤝 参与贡献
+## 参与贡献
 
 欢迎提交 Issue 反馈问题或建议，也欢迎提交 Pull Request 共同改进项目！
 
@@ -119,6 +119,6 @@ frp 的流量统计数据是由服务端（frps）统计的。如需查看流量
 
 ---
 
-## 📄 开源许可
+## 开源许可
 
 本项目基于 [MIT License](LICENSE) 开源。
