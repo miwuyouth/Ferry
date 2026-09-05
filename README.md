@@ -18,6 +18,10 @@
 
 **Ferry** 是一款专为 macOS 设计的轻量级 `frpc` 桌面客户端。旨在摆脱繁琐的手动编辑配置文件与终端命令行操作，将代理隧道的管理转变为直观优雅的 macOS 原生图形界面体验，并在菜单栏实时展示连接状态与关键指标。
 
+<p align="center">
+  <img src="docs/screenshots/main-window.png" width="90%" alt="Ferry 界面预览">
+</p>
+
 ## ✨ 特性
 
 - 🍏 **macOS 原生体验**：严格遵循 Apple 界面设计规范，完美适配浅色与深色模式，原生菜单栏常驻与快捷呼出。
