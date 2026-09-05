@@ -9,6 +9,7 @@ const invoke = (channel, payload) => ipcRenderer.invoke(channel, payload);
 contextBridge.exposeInMainWorld('ferry', {
   platform: process.platform,
   bootstrap: () => invoke('app:bootstrap'),
+  copy: (text) => invoke('app:copy', text),
 
   onState: (cb) => {
     const h = (_e, s) => cb(s);

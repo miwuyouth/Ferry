@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, dialog, shell, Notification, nativeTheme, nativeImage, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, clipboard, dialog, shell, Notification, nativeTheme, nativeImage, globalShortcut } = require('electron');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -170,6 +170,13 @@ function registerIpc() {
     frpcPath: frpc.resolveBinary(),
     onboarded: store.settings.onboarded
   }));
+
+  // 剪贴板走主进程：渲染层是 file:// 页面，navigator.clipboard 不一定可用。
+  ipcMain.handle('app:copy', (_e, text) => {
+    if (typeof text !== 'string' || !text) return false;
+    clipboard.writeText(text);
+    return true;
+  });
 
   ipcMain.handle('log:all', () => logs.all());
   ipcMain.handle('log:clear', () => { logs.clear(); return true; });

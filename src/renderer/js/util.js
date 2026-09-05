@@ -48,15 +48,31 @@ FK.duration = (since) => {
   return `${m}m`;
 };
 
-// 隧道的「本地 → 远程」那一列。远程地址优先用 frpc 报的真实值。
+// 远程地址（列表里「→」右边那半截）。优先用 frpc 报的真实值。
+// 端口还没定下来时返回 null —— 这种地址复制出去也没用。
+FK.remote = (t, serverAddr) => {
+  if (t.remoteAddr) return t.remoteAddr.replace(/^:/, `${serverAddr || 'frps'}:`);
+  if (t.type === 'tcp' || t.type === 'udp') {
+    return t.remotePort ? `${serverAddr || 'frps'}:${t.remotePort}` : null;
+  }
+  return (t.customDomains || [])[0] || null;
+};
+
+// 复制出去的值：http/https 补上协议头，直接能粘进浏览器。
+FK.remoteCopy = (t, serverAddr) => {
+  const r = FK.remote(t, serverAddr);
+  if (!r) return null;
+  if (t.type === 'http' || t.type === 'https') return `${t.type}://${r}`;
+  return r;
+};
+
+// 隧道的「本地 → 远程」那一列。
 FK.route = (t, serverAddr) => {
   const local = `${t.localIP || '127.0.0.1'}:${t.localPort}`;
-  if (t.remoteAddr) return `${local} → ${t.remoteAddr.replace(/^:/, `${serverAddr || 'frps'}:`)}`;
-  if (t.type === 'tcp' || t.type === 'udp') {
-    return `${local} → ${serverAddr || 'frps'}:${t.remotePort || '?'}`;
-  }
-  const d = (t.customDomains || [])[0];
-  return `${local} → ${d || FK.t('route.noDomain')}`;
+  const remote = FK.remote(t, serverAddr);
+  if (remote) return `${local} → ${remote}`;
+  const isPort = t.type === 'tcp' || t.type === 'udp';
+  return `${local} → ${isPort ? `${serverAddr || 'frps'}:?` : FK.t('route.noDomain')}`;
 };
 
 FK.short = (t) => `:${t.localPort}`;

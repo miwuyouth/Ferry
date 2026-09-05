@@ -29,7 +29,12 @@
     const type = el('span', 'tag tag-outline');
     type.style.textTransform = 'uppercase';
 
-    const routeCell = el('div', 'mono row-route ellipsis');
+    const routeCell = el('div', 'row-route');
+    const routeText = el('span', 'mono ellipsis');
+    const copy = el('button', 'row-copy', '⧉');
+    copy.type = 'button';
+    copy.title = t('row.copy');
+    routeCell.append(routeText, copy);
     const conns = el('span', 'mono row-num');
     const traffic = el('span', 'mono row-num');
 
@@ -43,7 +48,23 @@
     actions.append(del, sw);
 
     node.append(nameCell, type, routeCell, conns, traffic, actions);
-    return { node, refs: { dot, title, state, type, routeCell, conns, traffic, del, sw } };
+    return { node, refs: { dot, title, state, type, routeText, copy, conns, traffic, del, sw } };
+  }
+
+  // 复制远程地址：按钮就地变成 ✓，1.2s 后还原。
+  async function copyRemote(entry) {
+    if (!entry.remote) return;
+    await window.ferry.copy(entry.remote);
+    const btn = entry.refs.copy;
+    clearTimeout(entry.copyTimer);
+    btn.textContent = '✓';
+    btn.classList.add('done');
+    btn.title = FK.t('row.copied');
+    entry.copyTimer = setTimeout(() => {
+      btn.textContent = '⧉';
+      btn.classList.remove('done');
+      btn.title = FK.t('row.copy');
+    }, 1200);
   }
 
   function paintRow(entry, t) {
@@ -54,8 +75,12 @@
     r.state.className = `row-state ellipsis ${t.enabled ? t.kind : ''}`;
     r.state.title = t.state;
     r.type.textContent = t.type;
-    r.routeCell.textContent = route(t, serverAddr);
-    r.routeCell.title = r.routeCell.textContent;
+    r.routeText.textContent = route(t, serverAddr);
+    r.routeText.title = r.routeText.textContent;
+    entry.remote = FK.remoteCopy(t, serverAddr);
+    r.copy.hidden = !entry.remote;
+    // 换语言时行是重绘的，顺手把提示语跟上（正在显示「已复制」的先不动）。
+    if (!r.copy.classList.contains('done')) r.copy.title = FK.t('row.copy');
     r.conns.textContent = t.conns == null ? '—' : String(t.conns);
     r.traffic.textContent =
       t.up == null && t.down == null ? '—' : bytes((t.up || 0) + (t.down || 0));
@@ -65,6 +90,7 @@
     if (!r.sw.dataset.wired) {
       r.sw.dataset.wired = '1';
       r.sw.addEventListener('click', () => window.ferry.tunnels.toggle(entry.id));
+      r.copy.addEventListener('click', () => copyRemote(entry));
       r.del.addEventListener('click', async () => {
         if (!confirm(FK.t('confirm.deleteTunnel', { name: entry.name }))) return;
         await window.ferry.tunnels.remove(entry.id);
