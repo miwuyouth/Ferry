@@ -64,8 +64,15 @@ function positionPanel() {
   panel.setBounds({ x, y, width: PANEL_W, height: Math.max(PANEL_MIN, h) });
 }
 
+// 面板可能已经被销毁（比如一次被拦下来的退出会先关掉它），这时候要重建，
+// 不能拿着死对象去调 isVisible()。
+function ensurePanel() {
+  if (!panel || panel.isDestroyed()) createPanel();
+  return panel;
+}
+
 function togglePanel() {
-  if (!panel) createPanel();
+  ensurePanel();
   if (panel.isVisible()) { panel.hide(); return; }
   positionPanel();
   panel.show();
@@ -96,7 +103,7 @@ function createTray({ onShow, onQuit }) {
         state.connected ? 'Ferry — 已连接' : state.running ? 'Ferry — 连接中' : 'Ferry — 未运行'
       );
     },
-    hidePanel() { if (panel && panel.isVisible()) panel.hide(); },
+    hidePanel() { if (panel && !panel.isDestroyed() && panel.isVisible()) panel.hide(); },
 
     // 隧道多的时候面板要长一点，少的时候不该留一片空白。
     // 高度由渲染层量完内容报上来。
@@ -104,7 +111,7 @@ function createTray({ onShow, onQuit }) {
       const next = Math.max(PANEL_MIN, Math.min(PANEL_MAX, Math.round(h)));
       if (next === panelH) return;
       panelH = next;
-      if (panel && panel.isVisible()) positionPanel();
+      if (panel && !panel.isDestroyed() && panel.isVisible()) positionPanel();
     },
     showMain: onShow,
     quit: onQuit

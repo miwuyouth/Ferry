@@ -1,6 +1,6 @@
 'use strict';
 
-const { app, BrowserWindow, ipcMain, dialog, shell, Notification, nativeTheme, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Notification, nativeTheme, nativeImage, globalShortcut } = require('electron');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -51,10 +51,21 @@ function createMainWindow() {
   mainWindow.on('closed', () => { mainWindow = null; });
 }
 
+// 打包后的 app 从 Info.plist 里的 icon.icns 拿图标，不需要这个。但 `npm start`
+// 直接跑裸的 electron 二进制时，Dock 显示的是 electron 自己的原子 logo，得手动设。
+// 而且每次 dock.show() 都会按 bundle 里的图标重建 Dock tile，把这里设过的图标冲掉
+// —— 所以不是设一次就完事，show() 之后必须重设。
+function applyDockIcon() {
+  if (app.isPackaged || !app.dock) return;
+  const img = nativeImage.createFromPath(path.join(__dirname, '..', '..', 'resources', 'icon.png'));
+  if (!img.isEmpty()) app.dock.setIcon(img);
+}
+
 function showMainWindow() {
   if (!mainWindow) createMainWindow();
   else { mainWindow.show(); mainWindow.focus(); }
   app.dock?.show();
+  applyDockIcon();
 }
 
 // —— 往渲染进程推 ————————————————————————————————————————
@@ -269,21 +280,20 @@ function registerIpc() {
 
 // —— 启动 ——————————————————————————————————————————————
 
-if (!app.requestSingleInstanceLock()) {
+const gotTheLock = app.requestSingleInstanceLock();
+if (!gotTheLock) {
   app.quit();
 } else {
   app.on('second-instance', () => showMainWindow());
 }
 
 app.whenReady().then(async () => {
-  nativeTheme.themeSource = 'system'; // 跟随系统的浅色 / 深色外观
+  // 没抢到锁的那个实例只负责退出：再建一遍托盘、面板、frpc 会多一个菜单栏图标、
+  // 多闪一下 Dock 图标，还可能去动同一份配置。
+  if (!gotTheLock) return;
 
-  // 打包后的 app 从 Info.plist 里的 icon.icns 拿图标，这行不需要也不影响。
-  // 但 `npm start` 直接跑裸的 electron 二进制时，Dock 默认显示电子的原子 logo——
-  // 必须手动设一次才会换成我们自己的图标。
-  if (!app.isPackaged) {
-    app.dock?.setIcon(path.join(__dirname, '..', '..', 'resources', 'icon.png'));
-  }
+  nativeTheme.themeSource = 'system'; // 跟随系统的浅色 / 深色外观
+  applyDockIcon();
 
   store = new Store();
   logs = new LogBuffer(store.logPath, (batch) => broadcast('push:logs', batch));
@@ -329,9 +339,13 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', async (e) => {
+  // 先认账：这时候是真的在退出（⌘Q、菜单栏的「退出」、登出关机都会走这里）。
+  // 不置位的话，主窗口的 close 会以为只是关窗而 preventDefault —— 退出被拦下，
+  // 但面板窗口已经先一步被销毁了，应用就卡在「还活着但面板是死的」状态，
+  // 下一次点菜单栏图标必崩（Object has been destroyed）。
+  quitting = true;
   if (!frpc || !frpc.proc) return;
   e.preventDefault();
-  quitting = true;
   clearInterval(pushTimer);
   globalShortcut.unregisterAll();
   metrics.stop();
